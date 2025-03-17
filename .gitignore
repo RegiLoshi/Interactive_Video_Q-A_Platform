@@ -25,3 +25,4 @@ dist-ssr
 .qodo
 
 client/.env
+server/.env
