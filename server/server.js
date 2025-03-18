@@ -1,9 +1,8 @@
 import app from "./app.js"
-import dotenv from "dotenv";
 import logInController from "./controller/authController.js"
 import authenticate_token from "./middlewares/authenticateToken.js"
 
-dotenv.config();
+
 
 const PORT = process.env.PORT || 5000;
 
@@ -16,6 +15,7 @@ app.get("/", (req, res) => {
 app.get("/users", authenticate_token, logInController.getUsers);
 app.post("/signup", logInController.signUp);
 app.post("/login", logInController.logIn);
+app.post("/refresh", logInController.refreshToken)
 
 app.listen(PORT, () => {
     console.log(`Server running on port: ${PORT}`);
