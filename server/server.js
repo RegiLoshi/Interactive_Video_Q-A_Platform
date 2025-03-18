@@ -1,7 +1,7 @@
 import app from "./app.js"
 import dotenv from "dotenv";
 import logInController from "./controller/authController.js"
-
+import authenticate_token from "./middlewares/authenticateToken.js"
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
     return res.send("Hello World");
 })
 
-app.get("/users", logInController.getUsers);
+app.get("/users", authenticate_token, logInController.getUsers);
 app.post("/signup", logInController.signUp);
 app.post("/login", logInController.logIn);
 
