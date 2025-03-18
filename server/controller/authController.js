@@ -1,6 +1,6 @@
 import prismaClient from "../config/prismaClient.js"
 import bcrypt from "bcrypt"
-
+import jwt from "jsonwebtoken"
 
 const getUsers = async (req, res) => {
     try {
@@ -102,6 +102,12 @@ const logIn =  async (req, res) => {
     const user = await prismaClient.user.findUnique({
         where:{
             email: email
+        },
+        select:{
+            id: true,
+            email: true,
+            role: true,
+            hashed_password: true
         }
     })
 
@@ -115,9 +121,13 @@ const logIn =  async (req, res) => {
 
             delete user.hashed_password;
 
+            const acess_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+
+
             return res.status(200).json({
                 message: "User logged in!",
-                user: user
+                user: user,
+                token: acess_token
             });
         }else{
             return res.status(401).json({
