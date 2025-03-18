@@ -29,6 +29,7 @@ model User {
   liked_questions Question[]          @relation("likedQuestionByUsers")
   liked_answers Answer[]              @relation("likedAnswerByUsers")
   subscribed_questions Question[]     @relation("subsribedQuestions")
+  refresh_tokens Refresh_Token[]
 }
 
 model Question{
@@ -66,6 +67,17 @@ model Categories {
   name      String
   users     User[]  @relation("UserLikedCategories")
   questions Question[] 
+}
+
+model Refresh_Token{
+  id    String   @id @default(uuid())
+  user User @relation(fields: [user_id], references: [id])
+  user_id String
+  hashed_token   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
+  revoked   Boolean  @default(false) 
 }
 
 enum Role{

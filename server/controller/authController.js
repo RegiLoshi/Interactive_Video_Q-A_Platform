@@ -3,6 +3,7 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 const getUsers = async (req, res) => {
+    console.log(req.user)
     try {
         const users = await prismaClient.user.findMany({
             include: {
@@ -121,7 +122,25 @@ const logIn =  async (req, res) => {
 
             delete user.hashed_password;
 
-            const acess_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+            const acess_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
+            const refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'});
+
+            res.cookie('refresh_token',
+            refresh_token, 
+            { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000 });  // 7 days
+
+            const hashed_refresh_token = bcrypt.hashSync(refresh_token,10);
+
+            await prismaClient.refresh_Token.create({
+                data:{
+                    user_id: user.id,
+                    hashed_token: hashed_refresh_token,
+                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                },
+            })
 
 
             return res.status(200).json({
@@ -142,4 +161,54 @@ const logIn =  async (req, res) => {
     }
 }
 
-export default { logIn, signUp, getUsers };
+const refreshToken = async (req, res) => {
+    const refresh_token = req.cookies?.refresh_token;
+
+    if(!refresh_token){
+        return res.status(403).json({
+            message: "Log In expired"
+        });
+    }
+    
+    try {
+        const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+        
+        const storedRefreshToken = await prismaClient.refresh_Token.findFirst({
+            where: {
+                user_id: decoded.id,
+                revoked: false,
+                expiresAt: { gte: new Date() }
+            }
+        });
+
+        if (!storedRefreshToken) {
+            return res.status(403).json({ message: "Invalid or expired refresh token" });
+        }
+
+        const isTokenValid = await bcrypt.compare(refresh_token, storedRefreshToken.hashed_token);
+
+        if (!isTokenValid) {
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
+
+        const userPayload = {
+            id: decoded.id,
+            email: decoded.email,
+            role: decoded.role
+        };
+
+        const access_token = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"});
+        
+        return res.status(200).json({
+            message: "Token refreshed successfully!",
+            user: userPayload,
+            token: access_token
+        });
+    } catch(error) {
+        console.log(error);
+        return res.status(403).json({
+            message: "Not Authorized"
+        });
+    }
+};
+export default { logIn, signUp, getUsers, refreshToken};
