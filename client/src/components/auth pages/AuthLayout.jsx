@@ -31,7 +31,7 @@ const AuthLayout = () => {
                     </ul>
                 </section>
         </div>
-        <div className='w-[50%] h-full flex flex-col'>
+        <div className='w-[50%] h-full flex flex-col justify-between'>
             <Outlet />
             <footer className="color-[#0F1828] text-center py-4 mt-4">
                 <p>&copy; {new Date().getFullYear()} AnswerTube All rights reserved.</p>
