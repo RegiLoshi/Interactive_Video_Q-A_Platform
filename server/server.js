@@ -15,7 +15,10 @@ app.get("/", (req, res) => {
 app.get("/users", authenticate_token, logInController.getUsers);
 app.post("/signup", logInController.signUp);
 app.post("/login", logInController.logIn);
-app.post("/refresh", logInController.refreshToken)
+app.post("/refresh", logInController.refreshToken);
+app.post("/requestPassword",logInController.requestPassword);
+app.post("/resetPassword",logInController.resetPassword);
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port: ${PORT}`);
