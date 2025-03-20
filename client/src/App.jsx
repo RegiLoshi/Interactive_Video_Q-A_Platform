@@ -4,6 +4,7 @@ import {React} from "react";
 import AuthLayout from "./components/auth pages/AuthLayout"
 import LogIn  from './components/auth pages/LogIn';
 import { Routes, Route } from "react-router-dom";
+import SignUp from './components/auth pages/SignUp';
 function App() {
 
   const user = useUserStore((state) => state.user);
@@ -12,7 +13,7 @@ function App() {
     <Routes>
       <Route path="/auth" element={<AuthLayout />}>
         <Route path="login" element={<LogIn />} />
-        <Route path="signup" element={<h1>Test signup</h1>} />
+        <Route path="signup" element={<SignUp />} />
       </Route>
     </Routes>
   )

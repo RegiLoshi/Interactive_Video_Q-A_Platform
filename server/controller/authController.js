@@ -39,7 +39,8 @@ REQUEST EXAMPLE:
 */
 
 const signUp = async (req, res) => {
-    const { name, last_name, email, password, date_of_birth } = req.body;
+    console.log(req.body);
+    const { name, lastName, email, password, dateOfBirth } = req.body;
 
     const existingUser = await prismaClient.user.findUnique({
         where:{
@@ -59,10 +60,10 @@ const signUp = async (req, res) => {
 
     const user = {
         name,
-        last_name,
+        last_name : lastName,
         email,
         hashed_password,
-        date_of_birth: new Date(req.body.date_of_birth)
+        date_of_birth: new Date(dateOfBirth)
     };
 
     try{
