@@ -67,11 +67,19 @@ const PasswordResetPage = () => {
             if (response.status === 200) {
                 setResetSuccess(true);
             } else {
-                alert(result.message);
+                Swal.fire({
+                    title: "Failure",
+                    text: result.message,
+                    icon: "error"
+                  });
             }
         } catch (error) {
             console.error('Error during password reset:', error);
-            alert("An error occurred while resetting your password.");
+            Swal.fire({
+                title: "Failure",
+                text: "Internal error",
+                icon: "error"
+              });
         }
     };
     

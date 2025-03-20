@@ -3,6 +3,7 @@ import { FaEye, FaEyeSlash, FaUserNinja, FaUserPlus } from 'react-icons/fa';
 import useUserStore from '../../stores/userStore';
 import loginSchema from '../../validations/loginSchema.js'
 import { Link } from "react-router";
+import Swal from 'sweetalert2'
 const LogIn = () => {
   const setUser = useUserStore((state) => state.setUser);
   const setToken = useUserStore((state) => state.setToken);
@@ -42,12 +43,24 @@ const LogIn = () => {
       setUser(result.user);
       setToken(result.token);
       if (response.status == 200) {
-        alert("Successful!");
+        Swal.fire({
+          title: "Success",
+          text: "You have successfully logged in",
+          icon: "success"
+        });
       } else {
-        alert(result.message);
+        Swal.fire({
+          title: "Failure",
+          text: result.message,
+          icon: "error"
+        });
       }
     } catch (error) {
-      console.error('Error during login:', error);
+      Swal.fire({
+        title: "Failure",
+        text: "Internal error",
+        icon: "error"
+      });
     }
   };
 

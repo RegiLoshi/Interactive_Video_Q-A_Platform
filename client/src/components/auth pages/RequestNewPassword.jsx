@@ -46,11 +46,19 @@ const RequestNewPassword = () => {
       if (response.status === 200) {
         setRequestSent(true);
       } else {
-        setErrors({ email: result.message || 'Something went wrong. Please try again.' });
+        Swal.fire({
+          title: "Failure",
+          text: result.message,
+          icon: "error"
+        });
       }
     } catch (error) {
       console.error('Error during password reset request:', error);
-      setErrors({ email: 'Failed to send reset request. Please try again later.' });
+      Swal.fire({
+        title: "Failure",
+        text: "Internal error",
+        icon: "error"
+      });
     } finally {
       setIsSubmitting(false);
     }

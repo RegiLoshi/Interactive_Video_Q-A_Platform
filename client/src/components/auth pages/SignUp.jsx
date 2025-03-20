@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from "react-router";
 import { FaEye, FaEyeSlash, FaUserNinja, FaUserPlus } from 'react-icons/fa';
 import signUpSchema from '../../validations/signUpSchema';
-import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker-cssmodules.css';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -47,12 +46,24 @@ const SignUp = () => {
       const result = await response.json();
       console.log(result);
       if (response.status == 200) {
-        alert("Successful!");
+        Swal.fire({
+          title: "Success",
+          text: "You have successfully signed up",
+          icon: "success"
+        });
       } else {
-        alert(result.message);
+        Swal.fire({
+          title: "Failure",
+          text: result.message,
+          icon: "error"
+        });
       }
     } catch (error) {
-      console.error('Error during login:', error);
+      Swal.fire({
+        title: "Failure",
+        text: "Internal error",
+        icon: "error"
+      });
     }
   };
 
