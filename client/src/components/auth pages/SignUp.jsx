@@ -1,20 +1,26 @@
 import { useState } from 'react';
-import { FaEye, FaEyeSlash, FaUserNinja, FaUserPlus } from 'react-icons/fa';
-import useUserStore from '../../stores/userStore';
-import loginSchema from '../../validations/loginSchema.js'
 import { Link } from "react-router";
-const LogIn = () => {
-  const setUser = useUserStore((state) => state.setUser);
-  const setToken = useUserStore((state) => state.setToken);
+import { FaEye, FaEyeSlash, FaUserNinja, FaUserPlus } from 'react-icons/fa';
+import signUpSchema from '../../validations/signUpSchema';
+import DatePicker from "react-datepicker";
+import 'react-datepicker/dist/react-datepicker-cssmodules.css';
+import "react-datepicker/dist/react-datepicker.css";
+
+const SignUp = () => {
+  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState(new Date());
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: "", password: "" }); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validation = loginSchema.safeParse({ email, password });
+    const validation = signUpSchema.safeParse({ name, lastName, email, password, dateOfBirth });
+    console.log(validation.error)
+
     console.log(validation)
     
     if (!validation.success) {
@@ -27,10 +33,10 @@ const LogIn = () => {
     }
 
 
-    const data = { email, password };
+    const data = { name, lastName, email, password, dateOfBirth };
     
     try {
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch('http://localhost:3000/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,8 +45,7 @@ const LogIn = () => {
       });
       
       const result = await response.json();
-      setUser(result.user);
-      setToken(result.token);
+      console.log(result);
       if (response.status == 200) {
         alert("Successful!");
       } else {
@@ -58,11 +63,47 @@ const LogIn = () => {
   return (
     <form onSubmit={handleSubmit} className="w-full h-full flex flex-col space-y-4 justify-start items-center p-30">
       <h1 className="!text-2xl font-semibold text-center mb-8">AnswerTube</h1>
+
+      <div className='w-full'>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input
+          type="text"
+          id="name"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="John"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoComplete="on"
+        />
+        {errors.name && (
+          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
+            {errors.name}
+          </p>
+        )}
+      </div>
+
+      <div className='w-full'>
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+        <input
+          type="text"
+          id="lastName"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Doe"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          autoComplete="on"
+        />
+        {errors.lastName && (
+          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
+            {errors.lastName}
+          </p>
+        )}
+      </div>
       
       <div className='w-full'>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
         <input
-          type="text"
+          type="email"
           id="email"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="your@email.com"
@@ -103,22 +144,34 @@ const LogIn = () => {
           </p>
         )}
       </div>
-      
-      <span className='flex w-full justify-end font-bold cursor-pointer'>
-        Forgot password?
-      </span>
+
+      <div className='w-full'>
+        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+        <input 
+          id="dateOfBirth"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          type="date" 
+          value={dateOfBirth} 
+          onChange={(e) => setDateOfBirth(e.target.value)} 
+        />
+        {errors.dateOfBirth && (
+          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
+            {errors.dateOfBirth}
+          </p>
+        )}
+      </div>
       
       <button 
         type="submit"
-        className='w-full bg-[#101827] text-[#AAADB2] p-3 rounded !mb-10 hover:text-white'
+        className='w-full bg-[#101827] text-[#AAADB2] p-3 rounded !mb-10 hover:text-white '
       >
-        Sign in
+        Sign Up
       </button>
       
       <div className='flex items-center justify-center space-x-2'>
         <FaUserPlus className="text-xl text-[#0F1828]" />
-        <span>Don't have an account?</span>
-        <Link className='font-bold cursor-pointer' to='/auth/signup'>Sign up</Link>
+        <span>Already have an account?</span>
+        <Link className='font-bold cursor-pointer' to='/auth/login'>Sign In</Link>
       </div>
       
       <div className="flex items-center justify-center space-x-2 text-gray-600 mt-4">
@@ -130,4 +183,4 @@ const LogIn = () => {
   );
 };
 
-export default LogIn;
+export default SignUp;
