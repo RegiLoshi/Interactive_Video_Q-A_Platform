@@ -104,9 +104,9 @@ const LogIn = () => {
         )}
       </div>
       
-      <span className='flex w-full justify-end font-bold cursor-pointer'>
+      <Link className='flex w-full justify-end font-bold cursor-pointer' to="/auth/requestNewPassword">
         Forgot password?
-      </span>
+      </Link>
       
       <button 
         type="submit"

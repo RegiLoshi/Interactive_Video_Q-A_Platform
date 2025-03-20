@@ -1,7 +1,8 @@
 import prismaClient from "../config/prismaClient.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-
+import sendEmail from '../emailServices/emailServices.js'
+import crypto from 'crypto'
 const getUsers = async (req, res) => {
     console.log(req.user)
     try {
@@ -212,4 +213,133 @@ const refreshToken = async (req, res) => {
         });
     }
 };
-export default { logIn, signUp, getUsers, refreshToken};
+
+const requestPassword = async (req, res) => {
+    try {
+        const user = await prismaClient.user.findUnique({
+            where: {
+                email: req.body.email
+            }
+        });
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User with that email not found!",
+            });
+        }
+
+        let token = await prismaClient.Password_Reset_Token.findFirst({
+            where: {
+                user_id: user.id
+            }
+        });
+
+        if (token) await prismaClient.Password_Reset_Token.delete({
+            where: {
+                id: token.id
+            }
+        });
+        
+        let resetToken = crypto.randomBytes(32).toString("hex");
+        const hash = await bcrypt.hash(resetToken, 10);
+
+        await prismaClient.Password_Reset_Token.create({
+            data: {
+                user: {
+                    connect: {
+                        id: user.id
+                    }
+                },
+                hashed_token: hash,
+                createdAt: new Date()
+            }
+        });
+
+        const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/passwordReset?token=${resetToken}&id=${user.id}`;
+        
+        await sendEmail(
+            user.email,
+            "Password Reset Request",
+            {
+                name: user.name,
+                link: link,
+            },
+            "passwordReset"
+        );
+        
+        return res.status(200).json({ message: "Password reset link sent to your email" });
+    } catch (error) {
+        console.error("Password reset request error:", error);
+        return res.status(500).json({
+            message: "Error requesting password reset",
+            error: error.message
+        });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const user = await prismaClient.user.findUnique({
+            where: {
+                id: req.body.id
+            }
+        });
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User not found!",
+            });
+        }
+
+        const hash = await bcrypt.hash(req.body.token, 10);
+
+        const req_token = await prismaClient.Password_Reset_Token.findFirst({
+            where:{
+                user_id: req.body.id
+            }
+        })
+
+        if(!req_token){
+            return res.status(401).json({
+                message: "Request not found!",
+            });
+        }
+
+        const found_token = await bcrypt.compare(req_token.hashed_token,hash);
+
+        await prismaClient.Password_Reset_Token.delete({
+            where:{
+                id: req_token.id
+            }
+        });
+
+
+        const salt = await bcrypt.genSalt();
+
+        const hashed_password = await bcrypt.hash(req.body.password, salt);
+
+        const updated_user = await prismaClient.user.update({
+            where:{
+                id: user.id
+            },
+            data:{
+                hashed_password: hashed_password
+            }
+        })
+
+        res.status(200).json({
+            message: "Password reset succesfully!"
+        })
+
+
+    }catch (error) {
+            console.error("Password reset request error:", error);
+            return res.status(500).json({
+                message: "Error requesting password reset",
+                error: error.message
+            });
+        }
+}
+
+
+export default { logIn, signUp, getUsers, refreshToken, requestPassword, resetPassword};
