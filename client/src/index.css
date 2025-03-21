@@ -26,4 +26,51 @@
   .third-text{
     color: #9297A0;
   }
+
+  .main_bg_blue{
+    background-color: #101726;
+  }
+
+  .main_text_blue{
+    color: #101726
+  }
+
+  .blue-button {
+    background-color: #101726;
+    color: white;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  .blue-button:hover {
+    background-color: #1c2a43;
+  }
+
+  .red-button {
+    background-color: #9e1b32;
+    color: white;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  .red-button:hover {
+    background-color: #c91313;
+  }
+
+  .green-button {
+    background-color: #054e14;
+    color: white;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  .green-button:hover {
+    background-color: #098e2d;
+  }
 }

@@ -1,18 +1,19 @@
+import { Link } from "react-router";
 const Navbar = () => {
   return (
     <nav className="bg-[#FEFEFE] w-full flex justify-between items-center py-4 px-6 shadow-sm">
       <span className="text-[#585D67] font-medium text-lg cursor-default">Video Q&A</span>
 
       <ul className="flex justfiy-between items-center space-x-4">
-        <li className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</li>
-        <li className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Questions</li>
-        <li className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</li>
+        <Link to="/dashboard" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</Link>
+        <Link className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Questions</Link>
+        <Link  to="/dashboard/explore" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</Link>
       </ul>
 
       <div className="flex items-center space-x-4">
-        <button className="border px-4 py-2 bg-[#101726] rounded-lg text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
+        <Link to="/user/12/askQuestion" className="border px-4 py-2 bg-[#101726] rounded-lg text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
           Create a Question
-        </button>
+        </Link>
         <div className="w-10 h-10 rounded-full overflow-hidden">
           <img 
             className="w-full h-full object-cover  cursor-pointer"
