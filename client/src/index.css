@@ -47,4 +47,30 @@
   .blue-button:hover {
     background-color: #1c2a43;
   }
+
+  .red-button {
+    background-color: #9e1b32;
+    color: white;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  .red-button:hover {
+    background-color: #c91313;
+  }
+
+  .green-button {
+    background-color: #054e14;
+    color: white;
+    cursor: pointer;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  .green-button:hover {
+    background-color: #098e2d;
+  }
 }

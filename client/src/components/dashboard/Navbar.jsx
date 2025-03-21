@@ -11,9 +11,9 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center space-x-4">
-        <button className="border px-4 py-2 bg-[#101726] rounded-lg text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
+        <Link to="/user/12/askQuestion" className="border px-4 py-2 bg-[#101726] rounded-lg text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
           Create a Question
-        </button>
+        </Link>
         <div className="w-10 h-10 rounded-full overflow-hidden">
           <img 
             className="w-full h-full object-cover  cursor-pointer"

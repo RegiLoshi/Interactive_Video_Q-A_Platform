@@ -11,13 +11,7 @@ const VideoCard = ({video}) => {
 
     return(
         <div className="flex flex-col space-y-3 border-1 p-2 shadow-xl bg-[#FEFEFE]">
-            <video 
-                src={video.url} 
-                title={video.title} 
-                controls
-                preload="metadata"
-                className="w-full aspect-video object-cover rounded-lg"
-            />
+            <video src={video.url} title={video.title} controls autoPlay />
             <div className="flex justify-between items-start">
                 <span className="text-[#646464]">{video.title}</span>
                 <span 
@@ -35,10 +29,10 @@ const VideoCard = ({video}) => {
                 <span className="flex items-center space-x-4 text-[#646464]"><LiaCommentSolid color="blue"/> {video.answers}</span>
                 <span className="flex items-center space-x-4 text-[#646464]"><CiClock1 /> {video.timeCreated}</span>
             </div>
-            <button className="flex justify-center items-center bg-[#101726] p-3 text-white hover:bg-[#1c2a43] transition-colors cursor-pointer rounded-md">
+            <button className="flex justify-center items-center bg-[#101726] p-3 text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
                 <div className="flex space-x-6 justify-center items-center">
                     <BsReply />
-                    <span>Respond</span>
+                    Respond
                 </div>
             </button>
         </div>
