@@ -14,92 +14,149 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(uuid())
-  name      String
-  last_name String  
-  email     String      @unique
-  hashed_password   String
+  id              String      @id @default(uuid())
+  name            String
+  last_name       String  
+  email           String      @unique
+  hashed_password String
   date_of_birth   DateTime
-  liked_categories     Categories[]   @relation("UserLikedCategories")
-  role Role   @default(USER)
-  authored_questions Question[]       @relation("AuthoredQuestions")
-  authored_answers Answer[]           @relation("AuthoredAnswers")
-  bookmarked_questions Question[]     @relation("bookmarkedQuestionByUsers")
-  bookmarked_answers Answer[]         @relation("bookmarkedAnswerByUsers")
-  liked_questions Question[]          @relation("likedQuestionByUsers")
-  liked_answers Answer[]              @relation("likedAnswerByUsers")
-  subscribed_questions Question[]     @relation("subsribedQuestions")
+  liked_categories CategoryEnum[]  @relation("UserLikedCategories")
+  role            Role        @default(USER)
+  authored_questions Question[]    @relation("AuthoredQuestions")
+  authored_answers Answer[]        @relation("AuthoredAnswers")
+  bookmarked_questions Question[]  @relation("bookmarkedQuestionByUsers")
+  bookmarked_answers Answer[]      @relation("bookmarkedAnswerByUsers")
+  liked_questions Question[]       @relation("likedQuestionByUsers")
+  liked_answers Answer[]           @relation("likedAnswerByUsers")
+  subscribed_questions Question[]  @relation("subsribedQuestions")
   refresh_tokens Refresh_Token[]
   password_token Password_Reset_Token[] 
 }
 
-model Question{
-  id        String      @id @default(uuid())
-  author    User @relation(name: "AuthoredQuestions", fields: [author_id], references: [id])
-  author_id String      
-  title String
-  description String?
-  category Categories @relation(fields: [category_id], references: [id])
-  category_id String
-  created_at DateTime @default(now())
-  shareable_link String
-  answers Answer[] @relation("Answers")
-  bookedmarked_users User[] @relation("bookmarkedQuestionByUsers")
-  liked_users User[] @relation("likedQuestionByUsers")
-  subscribedUsers User[] @relation("subsribedQuestions")
+model Question {
+  id              String      @id @default(uuid())
+  author          User        @relation(name: "AuthoredQuestions", fields: [author_id], references: [id])
+  author_id       String      
+  title           String
+  description     String?
+  category        CategoryEnum @relation(fields: [category_id], references: [id])
+  category_id     String
+  created_at      DateTime    @default(now())
+  shareable_link  String
+  answers         Answer[]    @relation("Answers")
+  bookedmarked_users User[]   @relation("bookmarkedQuestionByUsers")
+  liked_users     User[]      @relation("likedQuestionByUsers")
+  subscribedUsers User[]      @relation("subsribedQuestions")
 }
 
-model Answer{
-  id        String      @id @default(uuid())
-  author    User @relation(name: "AuthoredAnswers",fields: [author_id], references: [id])
-  author_id String   
-  question  Question @relation(name: "Answers",fields: [question_id], references: [id])
-  question_id String   
-  response_type Response_type
-  text_answer String?
-  video_url String?
-  created_at DateTime @default(now())
-  bookedmarked_users User[] @relation("bookmarkedAnswerByUsers")
-  liked_users User[] @relation("likedAnswerByUsers")
+model Answer {
+  id              String      @id @default(uuid())
+  author          User        @relation(name: "AuthoredAnswers", fields: [author_id], references: [id])
+  author_id       String   
+  question        Question    @relation(name: "Answers", fields: [question_id], references: [id])
+  question_id     String   
+  response_type   Response_type
+  text_answer     String?
+  video_url       String?
+  created_at      DateTime    @default(now())
+  bookedmarked_users User[]   @relation("bookmarkedAnswerByUsers")
+  liked_users     User[]      @relation("likedAnswerByUsers")
 }
 
-model Categories {
-  id        String  @id @default(uuid())
-  name      String
-  users     User[]  @relation("UserLikedCategories")
-  questions Question[] 
+model CategoryEnum {
+  id              String      @id @default(uuid())
+  name            CategoryType
+  users           User[]      @relation("UserLikedCategories")
+  questions       Question[] 
 }
 
-model Refresh_Token{
-  id    String   @id @default(uuid())
-  user User @relation(fields: [user_id], references: [id])
-  user_id String
-  hashed_token   String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt 
-  revoked   Boolean  @default(false) 
+model Refresh_Token {
+  id              String      @id @default(uuid())
+  user            User        @relation(fields: [user_id], references: [id])
+  user_id         String
+  hashed_token    String
+  expiresAt       DateTime
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt 
+  revoked         Boolean     @default(false) 
 }
 
-model Password_Reset_Token{
-  id    String   @id @default(uuid())
-  user User @relation(fields: [user_id], references: [id])
-  user_id String @unique
-  hashed_token   String
-  createdAt DateTime @default(now())
+model Password_Reset_Token {
+  id              String      @id @default(uuid())
+  user            User        @relation(fields: [user_id], references: [id])
+  user_id         String      @unique
+  hashed_token    String
+  createdAt       DateTime    @default(now())
 }
 
-enum Role{
+enum Role {
   USER 
   ADMIN
 }
 
-enum Response_type{
+enum Response_type {
   VIDEO
   TEXT
 }
 
-enum Like_type{
+enum Like_type {
   LIKE
   DISLIKE
+}
+
+enum CategoryType {
+  TECHNOLOGY
+  PROGRAMMING
+  WEB_DEVELOPMENT
+  MOBILE_DEVELOPMENT
+  DATA_SCIENCE
+  ARTIFICIAL_INTELLIGENCE
+  MACHINE_LEARNING
+  CYBERSECURITY
+  CLOUD_COMPUTING
+  DEVOPS
+  DATABASES
+  BLOCKCHAIN
+  HEALTH_AND_MEDICINE
+  MENTAL_HEALTH
+  PHYSICAL_FITNESS
+  NUTRITION
+  BUSINESS
+  ENTREPRENEURSHIP
+  MARKETING
+  FINANCE
+  INVESTING
+  CAREER_ADVICE
+  EDUCATION
+  LANGUAGES
+  MATHEMATICS
+  SCIENCE
+  PHYSICS
+  CHEMISTRY
+  BIOLOGY
+  ASTRONOMY
+  ENVIRONMENTAL_SCIENCE
+  HISTORY
+  POLITICS
+  LAW
+  PHILOSOPHY
+  PSYCHOLOGY
+  SOCIOLOGY
+  ARTS_AND_CULTURE
+  MUSIC
+  LITERATURE
+  FILM_AND_TELEVISION
+  GAMING
+  TRAVEL
+  COOKING
+  FASHION
+  RELATIONSHIPS
+  PARENTING
+  HOME_IMPROVEMENT
+  GARDENING
+  PETS
+  AUTOMOTIVE
+  SPORTS
+  DIY_AND_CRAFTS
+  PHOTOGRAPHY
 }

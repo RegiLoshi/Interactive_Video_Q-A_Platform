@@ -9,6 +9,7 @@ import PasswordResetPage from './components/auth pages/PasswordResetPage';
 import RequestNewPassword from './components/auth pages/RequestNewPassword'
 import DashboardLayout from './components/dashboard/DashboardLayout'
 import Dashboard from './components/dashboard/Dashboard'
+import ExplorePage from './components/dashboard/ExplorePage'
 function App() {
 
   const user = useUserStore((state) => state.user);
@@ -23,6 +24,7 @@ function App() {
       </Route>
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<Dashboard/>} />
+        <Route path='explore' element={<ExplorePage/>} />
       </Route>
     </Routes>
   )

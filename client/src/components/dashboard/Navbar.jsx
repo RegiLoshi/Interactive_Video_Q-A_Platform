@@ -1,12 +1,13 @@
+import { Link } from "react-router";
 const Navbar = () => {
   return (
     <nav className="bg-[#FEFEFE] w-full flex justify-between items-center py-4 px-6 shadow-sm">
       <span className="text-[#585D67] font-medium text-lg cursor-default">Video Q&A</span>
 
       <ul className="flex justfiy-between items-center space-x-4">
-        <li className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</li>
-        <li className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Questions</li>
-        <li className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</li>
+        <Link to="/dashboard" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</Link>
+        <Link className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Questions</Link>
+        <Link  to="/dashboard/explore" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</Link>
       </ul>
 
       <div className="flex items-center space-x-4">

@@ -27,7 +27,7 @@ const Information = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-4 w-full">
                 {information.map(info => {
                     return(
-                        <div className="flex flex-col justify-center items-center space-y-4">
+                        <div className="flex flex-col justify-center items-center space-y-4" key={info.title}>
                             {info.logo}
                             <span className="text-[#909191]">{info.title}</span>
                             <span className="text-[#BDC1C7] ">{info.description}</span>
