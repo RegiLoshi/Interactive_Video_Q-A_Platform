@@ -7,6 +7,8 @@ import { Routes, Route } from "react-router-dom";
 import SignUp from './components/auth pages/SignUp';
 import PasswordResetPage from './components/auth pages/PasswordResetPage';
 import RequestNewPassword from './components/auth pages/RequestNewPassword'
+import DashboardLayout from './components/dashboard/DashboardLayout'
+import Dashboard from './components/dashboard/Dashboard'
 function App() {
 
   const user = useUserStore((state) => state.user);
@@ -18,6 +20,9 @@ function App() {
         <Route path="signup" element={<SignUp />} />
         <Route path="passwordReset" element={<PasswordResetPage />} /> 
         <Route path="requestNewPassword" element={<RequestNewPassword />} />
+      </Route>
+      <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<Dashboard/>} />
       </Route>
     </Routes>
   )
