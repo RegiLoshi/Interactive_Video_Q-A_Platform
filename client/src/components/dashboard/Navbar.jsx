@@ -6,7 +6,7 @@ const Navbar = () => {
 
       <ul className="flex justfiy-between items-center space-x-4">
         <Link to="/dashboard" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</Link>
-        <Link className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Questions</Link>
+        <Link to='/user/12' className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Profile</Link>
         <Link  to="/dashboard/explore" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</Link>
       </ul>
 

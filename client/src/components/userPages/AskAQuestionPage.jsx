@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { useParams } from "react-router";
 import { CiVideoOn, CiPen } from "react-icons/ci";
 import WebcamStreamCapture from "../WebCam"
-import { BsUpload } from 'react-icons/bs';
 import CATEGORY_OPTIONS from "../../data/Categories.js";
 
 const AskAQuestionPage = () => {
