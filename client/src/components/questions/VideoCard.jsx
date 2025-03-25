@@ -11,7 +11,7 @@ const VideoCard = ({video}) => {
 
     return(
         <div className="flex flex-col space-y-3 border-1 p-2 shadow-xl bg-[#FEFEFE]">
-            <video src={video.url} title={video.title} controls autoPlay />
+            <video src={video.url} title={video.title} controls />
             <div className="flex justify-between items-start">
                 <span className="text-[#646464]">{video.title}</span>
                 <span 

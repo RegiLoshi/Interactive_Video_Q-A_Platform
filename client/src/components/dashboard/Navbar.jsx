@@ -6,7 +6,7 @@ const Navbar = () => {
 
       <ul className="flex justfiy-between items-center space-x-4">
         <Link to="/dashboard" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</Link>
-        <Link className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Questions</Link>
+        <Link to='/user/12' className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Profile</Link>
         <Link  to="/dashboard/explore" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</Link>
       </ul>
 
@@ -14,13 +14,13 @@ const Navbar = () => {
         <Link to="/user/12/askQuestion" className="border px-4 py-2 bg-[#101726] rounded-lg text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
           Create a Question
         </Link>
-        <div className="w-10 h-10 rounded-full overflow-hidden">
+        <Link to="/user/12/settings" className="w-10 h-10 rounded-full overflow-hidden">
           <img 
-            className="w-full h-full object-cover  cursor-pointer"
+            className="w-full h-full object-cover cursor-pointer"
             src="https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
             alt="profile picture" 
           />
-        </div>
+        </Link>
       </div>
     </nav>
   )
