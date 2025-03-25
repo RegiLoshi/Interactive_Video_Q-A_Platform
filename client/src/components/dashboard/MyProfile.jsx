@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { useParams , Link} from "react-router";
 import { FaComment, FaHeart, FaCamera } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { IoAddOutline } from "react-icons/io5";
@@ -40,14 +40,14 @@ const MyProfile = () => {
                     <div className="w-72 bg-white rounded-lg p-6 h-[70%]">
                         <h2 className="text-lg font-medium mb-4">Quick Actions</h2>
                         <div className="flex flex-col space-y-3">
-                            <button className="w-full flex items-center justify-center gap-2 bg-[#101726] text-white py-3 px-4 rounded-lg hover:bg-[#1c2a43] transition-colors">
+                            <Link to='askQuestion' className="w-full flex items-center justify-center gap-2 bg-[#101726] text-white py-3 px-4 rounded-lg hover:bg-[#1c2a43] transition-colors">
                                 <IoAddOutline className="text-xl" />
                                 New Question
-                            </button>
-                            <button className="w-full flex items-center justify-center gap-2 bg-white text-gray-700 py-3 px-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                            </Link>
+                            <Link to="settings" className="w-full flex items-center justify-center gap-2 bg-white text-gray-700 py-3 px-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                                 <IoMdSettings className="text-xl" />
                                 Settings
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

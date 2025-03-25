@@ -243,8 +243,23 @@ const MyQuestions = ({text}) => {
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [questionsList, setQuestionsList] = useState(videos);
 
-    const filteredQuestions = videos.filter(question => {
+    const handleDeleteQuestion = (questionId) => {
+        if (window.confirm('Are you sure you want to delete this question?')) {
+            setQuestionsList(prevQuestions => 
+                prevQuestions.filter(q => q.id !== questionId)
+            );
+            
+            const remainingQuestions = questionsList.length - 1;
+            const maxPages = Math.ceil(remainingQuestions / ITEMS_PER_PAGE);
+            if (currentPage > maxPages) {
+                setCurrentPage(Math.max(1, maxPages));
+            }
+        }
+    };
+
+    const filteredQuestions = questionsList.filter(question => {
         const matchesType = filter === 'all' || question.response_type === filter;
         const matchesSearch = search === '' || 
             question.title.toLowerCase().includes(search.toLowerCase());
@@ -278,6 +293,19 @@ const MyQuestions = ({text}) => {
         setCurrentPage(page);
         window.scrollTo(0, 0);
     };
+
+    const handleClickOutside = (e) => {
+        if (!e.target.closest('.category-dropdown')) {
+            setIsDropdownOpen(false);
+        }
+    };
+
+    useState(() => {
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
 
     return (
         <div className="flex-1 bg-white rounded-lg overflow-hidden shadow-2xl">
@@ -330,7 +358,7 @@ const MyQuestions = ({text}) => {
                         />
                     </div>
 
-                    <div className="relative">
+                    <div className="relative category-dropdown">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -373,7 +401,11 @@ const MyQuestions = ({text}) => {
             <div className="divide-y">
                 {paginatedQuestions.length > 0 ? (
                     paginatedQuestions.map(question => (
-                        <MyQuestionCard key={question.id} question={question} />
+                        <MyQuestionCard 
+                            key={question.id} 
+                            question={question}
+                            onDelete={handleDeleteQuestion}
+                        />
                     ))
                 ) : (
                     <div className="p-8 text-center text-gray-500">

@@ -1,13 +1,18 @@
+import { useState } from 'react';
 import { CiHeart } from "react-icons/ci";
 import { LiaCommentSolid } from "react-icons/lia";
-import { IoEyeOutline } from "react-icons/io5";
 import { BsPlayCircle, BsThreeDotsVertical } from "react-icons/bs";
-import { FiShare2 } from "react-icons/fi";
+import { FiShare2, FiTrash2, FiEye } from "react-icons/fi";
 import { BiCategory } from "react-icons/bi";
 import { HiOutlineDocumentText } from "react-icons/hi";
+import { useNavigate, Link } from 'react-router-dom';
 
 const MyQuestionCard = ({ question = {} }) => {
+    const [showDropdown, setShowDropdown] = useState(false);
+    const navigate = useNavigate();
+    
     const {
+        id = '',
         url = '',
         category = 'Uncategorized',
         title = '',
@@ -22,17 +27,26 @@ const MyQuestionCard = ({ question = {} }) => {
         return null;
     }
 
-    console.log(question);
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        setShowDropdown(false);
+    };
+
+    const handleViewQuestion = (e) => {
+        e.stopPropagation();
+        navigate(`/question/${id}`);
+        setShowDropdown(false);
+    };
 
     return (
         <div className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 border-b transition-colors">
-            <div className="relative w-48 h-28 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="relative w-48 h-28 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden cursor-pointer" onClick={handleViewQuestion}>
                 {response_type === "video" ? (
                     <>
                         <video 
                             src={url} 
                             className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                            controls
+                            preload="metadata"
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
                             <BsPlayCircle className="w-10 h-10 text-white" />
@@ -46,7 +60,7 @@ const MyQuestionCard = ({ question = {} }) => {
                 )}
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 cursor-pointer" onClick={handleViewQuestion}>
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex flex-col">
                         <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">{title}</h3>
@@ -82,9 +96,36 @@ const MyQuestionCard = ({ question = {} }) => {
                 <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                     <FiShare2 className="w-5 h-5 text-gray-600" />
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <BsThreeDotsVertical className="w-5 h-5 text-gray-600" />
-                </button>
+                <div className="relative">
+                    <button 
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDropdown(!showDropdown);
+                        }}
+                    >
+                        <BsThreeDotsVertical className="w-5 h-5 text-gray-600" />
+                    </button>
+
+                    {showDropdown && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border overflow-hidden z-20">
+                            <button
+                                onClick={handleViewQuestion}
+                                className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                                <FiEye className="w-4 h-4" />
+                                View Question
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                                <FiTrash2 className="w-4 h-4" />
+                                Delete Question
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

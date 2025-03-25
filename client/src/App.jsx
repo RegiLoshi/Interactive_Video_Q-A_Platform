@@ -11,8 +11,9 @@ import DashboardLayout from './components/dashboard/DashboardLayout'
 import Dashboard from './components/dashboard/Dashboard'
 import ExplorePage from './components/dashboard/ExplorePage'
 import AskAQuestionPage from './components/userPages/AskAQuestionPage';
-import MyQuestions from './components/dashboard/MyProfile';
 import MyProfile from './components/dashboard/MyProfile';
+import SettingsPage from './components/userPages/SettingsPage';
+import QuestionPage from './components/questions/QuestionPage'
 function App() {
 
   const user = useUserStore((state) => state.user);
@@ -30,8 +31,12 @@ function App() {
         <Route path='explore' element={<ExplorePage/>} />
       </Route>
       <Route path="/user/:id" element={<DashboardLayout />}>
-      <Route path='askQuestion' element={<AskAQuestionPage/>} />
-      <Route index element={<MyProfile/>} />
+        <Route path='askQuestion' element={<AskAQuestionPage/>} />
+        <Route path='settings' element={<SettingsPage/>} />
+        <Route index element={<MyProfile/>} />
+      </Route>
+      <Route path='/question/:id' element={<DashboardLayout />}>
+        <Route index element={<QuestionPage/>} />
       </Route>
     </Routes>
   )
