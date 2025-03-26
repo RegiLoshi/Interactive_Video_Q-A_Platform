@@ -56,7 +56,7 @@ export const CATEGORIES = [
     "PHOTOGRAPHY"
   ];
   
-const categoryColors = {
+export const categoryColors = {
   NO_FILTER: { bg: '#F3F4F6', text: '#6B7280' },
   TECHNOLOGY: { bg: '#E8F5E9', text: '#2E7D32' },
   PROGRAMMING: { bg: '#E3F2FD', text: '#1976D2' },

@@ -39,6 +39,7 @@ model Question {
   author_id       String      
   title           String
   description     String?
+  isVideo         Boolean
   category        CategoryEnum @relation(fields: [category_id], references: [id])
   category_id     String
   created_at      DateTime    @default(now())

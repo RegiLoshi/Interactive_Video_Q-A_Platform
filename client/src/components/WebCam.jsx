@@ -2,7 +2,7 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { BsRecordCircle, BsStopCircle, BsPauseCircle, BsPlayCircle, BsUpload, BsTrash, BsDownload } from 'react-icons/bs';
 
-const WebcamStreamCapture = ({step, setStep}) => {
+const WebcamStreamCapture = ({step = 0, setStep = () => {}}) => {
     const webcamRef = useRef(null);
     const mediaRecorderRef = useRef(null);
     const uploadLocalVideoRef = useRef(null);
