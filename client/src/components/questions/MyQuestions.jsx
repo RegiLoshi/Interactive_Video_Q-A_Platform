@@ -291,7 +291,6 @@ const MyQuestions = ({text}) => {
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        window.scrollTo(0, 0);
     };
 
     const handleClickOutside = (e) => {

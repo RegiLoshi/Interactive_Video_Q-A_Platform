@@ -3,9 +3,9 @@ import { useParams } from "react-router";
 import { CiVideoOn, CiPen } from "react-icons/ci";
 import WebcamStreamCapture from "../WebCam"
 import CATEGORY_OPTIONS from "../../data/Categories.js";
-
 const AskAQuestionPage = () => {
     const {id} = useParams();
+    
     const [step, setStep] = useState(0);
     const [question, setQuestion] = useState("");
     const [isVideo, setIsVideo] = useState(true);
