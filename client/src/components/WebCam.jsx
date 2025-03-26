@@ -13,30 +13,60 @@ const WebcamStreamCapture = ({step, setStep}) => {
     const [video, setVideo] = useState();
     const [stream, setStream] = useState(null);
     const [minTimeReached, setMinTimeReached] = useState(false);
+    const [cameraPermission, setCameraPermission] = useState('prompt');
+    const [permissionError, setPermissionError] = useState(null);
 
     useEffect(() => {
-        // Initialize webcam stream when component mounts since it was causing errors before
-        const initializeStream = async () => {
+
+        const checkCameraPermission = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: true,
-                    audio: true 
-                });
-                setStream(stream);
-            } catch (err) {
-                console.error("Error accessing webcam:", err);
+                if ('permissions' in navigator) {
+                    const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+                    setCameraPermission(permissionStatus.state);
+
+                    permissionStatus.addEventListener('change', () => {
+                        setCameraPermission(permissionStatus.state);
+                        if (permissionStatus.state === 'granted') {
+                            initializeStream();
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking camera permission:', error);
             }
         };
 
-        initializeStream();
+        checkCameraPermission();
+    }, []);
 
-        // Cleanup function to stop all tracks when component unmounts
+    const initializeStream = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: true,
+                audio: true 
+            });
+            setStream(stream);
+            setPermissionError(null);
+        } catch (err) {
+            console.error("Error accessing webcam:", err);
+            setPermissionError(err.message);
+            setCameraPermission('denied');
+        }
+    };
+
+    // Initialize webcam stream when component mounts
+    useEffect(() => {
+        if (cameraPermission === 'granted') {
+            initializeStream();
+        }
+
+          // Cleanup function to stop all tracks when component unmounts
         return () => {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [cameraPermission]);
   
     const handleStartCaptureClick = useCallback(() => {
         if (!stream) {
@@ -137,11 +167,36 @@ const WebcamStreamCapture = ({step, setStep}) => {
           accept="video/*"
           className="hidden"
         />
-        <Webcam 
-          audio={true} 
-          ref={webcamRef} 
-          className='w-full rounded-lg border-2 border-[#101726] shadow-lg' 
-        />
+        
+        {cameraPermission === 'granted' ? (
+          <Webcam 
+            audio={true} 
+            ref={webcamRef} 
+            className='w-full rounded-lg border-2 border-[#101726] shadow-lg' 
+          />
+        ) : (
+          <div className="w-full h-[400px] rounded-lg border-2 border-[#101726] shadow-lg flex items-center justify-center bg-gray-100">
+            <div className="text-center">
+              {cameraPermission === 'denied' ? (
+                <>
+                  <p className="text-red-600 mb-4">Camera access is denied</p>
+                  <p className="text-sm text-gray-600 mb-4">Please enable camera access in your browser settings</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Reload Page
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-yellow-600 mb-4">Camera access required</p>
+                  <p className="text-sm text-gray-600">Please allow camera access to continue</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
         
         <div className="flex justify-center items-center space-x-4 mt-4">
           {!videoUploaded ? (
@@ -165,7 +220,7 @@ const WebcamStreamCapture = ({step, setStep}) => {
                   type="button"
                   className="flex items-center justify-center space-x-2 px-6 py-3 bg-[#101726] text-white rounded-lg hover:bg-[#1c2a43] transition-all duration-200 shadow-md"
                   onClick={handleStartCaptureClick}
-                  disabled={!stream}
+                  disabled={!stream || cameraPermission !== 'granted'}
                 >
                   <BsRecordCircle className="text-xl text-red-500 animate-pulse" />
                   <span>Record</span>
