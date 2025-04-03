@@ -99,72 +99,74 @@ REQUEST EXAMPLE:
 
 */
 
-const logIn =  async (req, res) => {
-    const {email , password} = req.body;
-    try{
-    const user = await prismaClient.user.findUnique({
-        where:{
-            email: email
-        },
-        select:{
-            id: true,
-            email: true,
-            role: true,
-            hashed_password: true
-        }
-    })
-
-    if(!user){
-        return res.status(401).json({
-            message: "User with that email not found!",
+const logIn = async (req, res) => {
+    const {email, password} = req.body;
+    try {
+        const user = await prismaClient.user.findUnique({
+            where: {
+                email: email
+            },
+            select: {
+                id: true,
+                name: true,
+                last_name: true,
+                email: true,
+                role: true,
+                date_of_birth: true,
+                hashed_password: true
+            }
         });
-    }
+
+        if(!user) {
+            return res.status(401).json({
+                message: "User with that email not found!",
+            });
+        }
+
         const isMatch = await bcrypt.compare(password, user.hashed_password);
-        if(isMatch){
+        if(isMatch) {
+            const userPayload = {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            };
 
-            delete user.hashed_password;
+            const access_token = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
+            const refresh_token = jwt.sign(userPayload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'});
 
-            const acess_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
-            const refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'});
-
-            res.cookie('refresh_token',
-            refresh_token, 
-            { 
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000 });  // 7 days
-
-            const hashed_refresh_token = bcrypt.hashSync(refresh_token,10);
+            const hashed_refresh_token = bcrypt.hashSync(refresh_token, 10);
 
             await prismaClient.refresh_Token.create({
-                data:{
+                data: {
                     user_id: user.id,
                     hashed_token: hashed_refresh_token,
                     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
                 },
-            })
+            });
 
+            const { hashed_password, ...userWithoutPassword } = user;
 
             return res.status(200).json({
                 message: "User logged in!",
-                user: user,
-                token: acess_token
+                user: userWithoutPassword,
+                token: access_token,
+                refreshToken: refresh_token
             });
-        }else{
+        } else {
             return res.status(401).json({
                 message: "Wrong password!",
             });
         }
-    }catch(error){
-        console.log(error);
+    } catch(error) {
+        console.error("Login error:", error);
         return res.status(500).json({
             message: "Internal Server Error!"
-        })
+        });
     }
 }
 
 const refreshToken = async (req, res) => {
-    const refresh_token = req.cookies?.refresh_token;
+    const refresh_token = req.body.refreshToken;
 
     if(!refresh_token){
         return res.status(403).json({
@@ -204,7 +206,8 @@ const refreshToken = async (req, res) => {
         return res.status(200).json({
             message: "Token refreshed successfully!",
             user: userPayload,
-            token: access_token
+            token: access_token,
+            refreshToken: refresh_token
         });
     } catch(error) {
         console.log(error);
@@ -341,5 +344,55 @@ const resetPassword = async (req, res) => {
         }
 }
 
+const logoutUser = async (req, res) => {
+    try {
+        const userId = req.body.userId;
+        const refreshToken = req.body.refreshToken;
 
-export default { logIn, signUp, getUsers, refreshToken, requestPassword, resetPassword};
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
+        if (refreshToken) {
+            try {
+                const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+                
+                await prismaClient.refresh_Token.updateMany({
+                    where: {
+                        user_id: userId,
+                        revoked: false,
+                        expiresAt: { gte: new Date() }
+                    },
+                    data: {
+                        revoked: true
+                    }
+                });
+            } catch (error) {
+                console.log("Error verifying token during logout:", error);
+            }
+        } else {
+            await prismaClient.refresh_Token.updateMany({
+                where: {
+                    user_id: userId,
+                    revoked: false
+                },
+                data: {
+                    revoked: true
+                }
+            });
+        }
+
+        return res.status(200).json({
+            message: "Logged out successfully"
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+        return res.status(500).json({
+            message: "Error during logout"
+        });
+    }
+};
+
+export default { logIn, signUp, getUsers, refreshToken, requestPassword, resetPassword, logoutUser };

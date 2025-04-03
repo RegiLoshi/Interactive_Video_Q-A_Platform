@@ -1,26 +1,38 @@
 import { useState } from 'react';
-import { Link } from "react-router";
-import { FaEye, FaEyeSlash, FaUserNinja, FaUserPlus } from 'react-icons/fa';
-import signUpSchema from '../../validations/signUpSchema';
-import 'react-datepicker/dist/react-datepicker-cssmodules.css';
-import "react-datepicker/dist/react-datepicker.css";
+import { FaEye, FaEyeSlash, FaUserPlus } from 'react-icons/fa';
+import useUserStore from '../../stores/userStore';
+import signUpSchema from '../../validations/signUpSchema.js';
+import { Link, useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 const SignUp = () => {
-  const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
+  const setUser = useUserStore((state) => state.setUser);
+  const setToken = useUserStore((state) => state.setToken);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    dateOfBirth: ""
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({ email: "", password: "" }); 
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
 
-    const validation = signUpSchema.safeParse({ name, lastName, email, password, dateOfBirth });
-    console.log(validation.error)
-
-    console.log(validation)
+    const validation = signUpSchema.safeParse(formData);
     
     if (!validation.success) {
       const errorMessages = validation.error.errors.reduce((acc, err) => {
@@ -31,8 +43,7 @@ const SignUp = () => {
       return;
     }
 
-
-    const data = { name, lastName, email, password, dateOfBirth };
+    const { confirmPassword, ...dataToSend } = formData;
     
     try {
       const response = await fetch('http://localhost:3000/signup', {
@@ -40,28 +51,31 @@ const SignUp = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(dataToSend),
       });
       
       const result = await response.json();
-      console.log(result);
-      if (response.status == 200) {
-        Swal.fire({
+      
+      if (response.status === 201) {
+        setUser(result.user);
+        setToken(result.token);
+        await Swal.fire({
           title: "Success",
-          text: "You have successfully signed up",
+          text: "Account created successfully!",
           icon: "success"
         });
+        navigate('/dashboard');
       } else {
-        Swal.fire({
-          title: "Failure",
-          text: result.message,
+        await Swal.fire({
+          title: "Error",
+          text: result.message || "Something went wrong",
           icon: "error"
         });
       }
     } catch (error) {
-      Swal.fire({
-        title: "Failure",
-        text: "Internal error",
+      await Swal.fire({
+        title: "Error",
+        text: "An error occurred while creating your account",
         icon: "error"
       });
     }
@@ -73,18 +87,18 @@ const SignUp = () => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full h-full flex flex-col space-y-4 justify-start items-center p-30">
-      <h1 className="!text-2xl font-semibold text-center mb-8">AnswerTube</h1>
-
+      <h1 className="!text-2xl font-semibold text-center mb-8">Create Account</h1>
+      
       <div className='w-full'>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
         <input
           type="text"
           id="name"
+          name="name"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="John"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoComplete="on"
+          value={formData.name}
+          onChange={handleChange}
         />
         {errors.name && (
           <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
@@ -98,11 +112,11 @@ const SignUp = () => {
         <input
           type="text"
           id="lastName"
+          name="lastName"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Doe"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          autoComplete="on"
+          value={formData.lastName}
+          onChange={handleChange}
         />
         {errors.lastName && (
           <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
@@ -116,15 +130,32 @@ const SignUp = () => {
         <input
           type="email"
           id="email"
+          name="email"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="your@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="on"
+          value={formData.email}
+          onChange={handleChange}
         />
         {errors.email && (
           <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
             {errors.email}
+          </p>
+        )}
+      </div>
+
+      <div className='w-full'>
+        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+        <input
+          type="date"
+          id="dateOfBirth"
+          name="dateOfBirth"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={formData.dateOfBirth}
+          onChange={handleChange}
+        />
+        {errors.dateOfBirth && (
+          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
+            {errors.dateOfBirth}
           </p>
         )}
       </div>
@@ -135,11 +166,11 @@ const SignUp = () => {
           <input
             type={showPassword ? "text" : "password"}
             id="password"
+            name="password"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="on"
+            value={formData.password}
+            onChange={handleChange}
           />
           <button 
             type="button"
@@ -157,38 +188,36 @@ const SignUp = () => {
       </div>
 
       <div className='w-full'>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-        <input 
-          id="dateOfBirth"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          type="date" 
-          value={dateOfBirth} 
-          onChange={(e) => setDateOfBirth(e.target.value)} 
-        />
-        {errors.dateOfBirth && (
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            id="confirmPassword"
+            name="confirmPassword"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="••••••••"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+          />
+        </div>
+        {errors.confirmPassword && (
           <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
-            {errors.dateOfBirth}
+            {errors.confirmPassword}
           </p>
         )}
       </div>
       
       <button 
         type="submit"
-        className='w-full bg-[#101827] text-[#AAADB2] p-3 rounded !mb-10 hover:text-white '
+        className='w-full bg-[#101827] text-[#AAADB2] p-3 rounded !mb-10 hover:text-white'
       >
-        Sign Up
+        Sign up
       </button>
       
       <div className='flex items-center justify-center space-x-2'>
         <FaUserPlus className="text-xl text-[#0F1828]" />
         <span>Already have an account?</span>
-        <Link className='font-bold cursor-pointer' to='/auth/login'>Sign In</Link>
-      </div>
-      
-      <div className="flex items-center justify-center space-x-2 text-gray-600 mt-4">
-        <FaUserNinja className="text-xl text-[#0F1828]" />
-        <span>Want to try first?</span>
-        <p className="text-[#0F1828] font-bold cursor-pointer">Continue as guest</p>
+        <Link className='font-bold cursor-pointer' to='/auth/login'>Sign in</Link>
       </div>
     </form>
   );
