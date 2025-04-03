@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { FaEye, FaEyeSlash, FaUserNinja, FaUserPlus } from 'react-icons/fa';
 import useUserStore from '../../stores/userStore';
 import loginSchema from '../../validations/loginSchema.js'
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2'
+
 const LogIn = () => {
   const setUser = useUserStore((state) => state.setUser);
   const setToken = useUserStore((state) => state.setToken);
+  const setRefreshToken = useUserStore((state) => state.setRefreshToken);
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +19,6 @@ const LogIn = () => {
     e.preventDefault();
 
     const validation = loginSchema.safeParse({ email, password });
-    console.log(validation)
     
     if (!validation.success) {
       const errorMessages = validation.error.errors.reduce((acc, err) => {
@@ -26,7 +28,6 @@ const LogIn = () => {
       setErrors(errorMessages);
       return;
     }
-
 
     const data = { email, password };
     
@@ -40,13 +41,17 @@ const LogIn = () => {
       });
       
       const result = await response.json();
-      setUser(result.user);
-      setToken(result.token);
-      if (response.status == 200) {
+      
+      if (response.status === 200) {
+        setUser(result.user);
+        setToken(result.token);
+        setRefreshToken(result.refreshToken);
         Swal.fire({
           title: "Success",
           text: "You have successfully logged in",
           icon: "success"
+        }).then(() => {
+          navigate('/dashboard');
         });
       } else {
         Swal.fire({

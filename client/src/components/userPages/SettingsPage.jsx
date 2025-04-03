@@ -3,6 +3,9 @@ import { CiUser } from "react-icons/ci";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { MdOutlinePrivacyTip, MdOutlineAccountCircle } from "react-icons/md";
 import { FiHelpCircle } from "react-icons/fi";
+import { FiLogOut } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import useUserStore from "../../stores/userStore";
 
 const SettingsPage = () => {
     const [activeSection, setActiveSection] = useState('account');
@@ -10,6 +13,35 @@ const SettingsPage = () => {
         emailNotifs: true,
         questionResponses: true
     });
+    const navigate = useNavigate();
+    const logout = useUserStore((state) => state.logout);
+    const user = useUserStore((state) => state.user);
+    const refreshToken = useUserStore((state) => state.refreshToken);
+
+    const handleSignOut = async () => {
+        try {
+            if (user) {
+                await fetch('http://localhost:3000/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        refreshToken: refreshToken
+                    }),
+                });
+            }
+            
+            logout();
+            
+            navigate('/auth/login');
+        } catch (error) {
+            console.error('Error during logout:', error);
+            logout();
+            navigate('/auth/login');
+        }
+    };
 
     const handleNotificationToggle = (key) => {
         setNotifications(prev => ({
@@ -95,6 +127,13 @@ const SettingsPage = () => {
                                     <span className="font-medium">{section.label}</span>
                                 </button>
                             ))}
+                            <button
+                                onClick={handleSignOut}
+                                className="w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-red-50 text-red-600 border-t"
+                            >
+                                <FiLogOut className="text-2xl" />
+                                <span className="font-medium">Sign Out</span>
+                            </button>
                         </div>
                     </div>
 
@@ -146,6 +185,17 @@ const SettingsPage = () => {
                                                     />
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div className="border-t pt-4">
+                                            <h3 className="text-lg font-medium text-gray-900 mb-3">Session Management</h3>
+                                            <button 
+                                                onClick={handleSignOut}
+                                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center gap-2"
+                                            >
+                                                <FiLogOut />
+                                                Sign Out
+                                            </button>
+                                            <p className="text-sm text-gray-500 mt-2">This will log you out from your current session</p>
                                         </div>
                                     </div>
                                     <div className="flex justify-end">

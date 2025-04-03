@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 const Navbar = () => {
   return (
-    <nav className="bg-[#FEFEFE] w-full flex justify-between items-center py-4 px-6 shadow-sm">
+    <nav className="bg-[#FEFEFE] w-full md:flex md:justify-between md:items-center md:py-4 md:px-6 shadow-sm">
       <span className="text-[#585D67] font-medium text-lg cursor-default">Video Q&A</span>
 
       <ul className="flex justfiy-between items-center space-x-4">
