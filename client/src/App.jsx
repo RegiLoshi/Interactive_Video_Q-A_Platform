@@ -8,11 +8,8 @@ import PasswordResetPage from './components/auth pages/PasswordResetPage';
 import RequestNewPassword from './components/auth pages/RequestNewPassword'
 import DashboardLayout from './components/dashboard/DashboardLayout'
 import Dashboard from './components/dashboard/Dashboard'
-import ExplorePage from './components/dashboard/ExplorePage'
-import AskAQuestionPage from './components/userPages/AskAQuestionPage';
 import MyProfile from './components/dashboard/MyProfile';
 import SettingsPage from './components/userPages/SettingsPage';
-import QuestionPage from './components/questions/QuestionPage'
 import ProtectedRoute from './components/auth pages/ProtectedRoute';
 import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
@@ -36,15 +33,13 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard/>} />
-            <Route path='explore' element={<ExplorePage/>} />
+            <Route path="create-survey" element={<div>Create Survey Page</div>} />
+            <Route path="surveys/:surveyId" element={<div>View Survey</div>} />
+            <Route path="surveys/:surveyId/edit" element={<div>Edit Survey</div>} />
           </Route>
           <Route path="/user/:id" element={<DashboardLayout />}>
-            <Route path='askQuestion' element={<AskAQuestionPage/>} />
             <Route path='settings' element={<SettingsPage/>} />
             <Route index element={<MyProfile/>} />
-          </Route>
-          <Route path='/question/:id' element={<DashboardLayout />}>
-            <Route index element={<QuestionPage/>} />
           </Route>
         </Route>
       </Routes>

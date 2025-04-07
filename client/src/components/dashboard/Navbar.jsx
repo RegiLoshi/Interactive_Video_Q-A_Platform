@@ -1,19 +1,10 @@
 import { Link } from "react-router";
 const Navbar = () => {
   return (
-    <nav className="bg-[#FEFEFE] w-full md:flex md:justify-between md:items-center md:py-4 md:px-6 shadow-sm">
-      <span className="text-[#585D67] font-medium text-lg cursor-default">Video Q&A</span>
+    <nav className="bg-[#FEFEFE] w-full flex justify-between items-center py-4 px-6 shadow-sm">
+      <span className="text-[#585D67] font-medium text-lg cursor-default">SurveyHub</span>
 
-      <ul className="flex justfiy-between items-center space-x-4">
-        <Link to="/dashboard" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Dashboard</Link>
-        <Link to='/user/12' className="text-[#585D67] hover:text-[#101726] cursor-pointer">My Profile</Link>
-        <Link  to="/dashboard/explore" className="text-[#585D67] hover:text-[#101726] cursor-pointer">Explore</Link>
-      </ul>
-
-      <div className="flex items-center space-x-4">
-        <Link to="/user/12/askQuestion" className="border px-4 py-2 bg-[#101726] rounded-lg text-white hover:bg-[#1c2a43] transition-colors cursor-pointer">
-          Create a Question
-        </Link>
+      <div className="flex items-center">
         <Link to="/user/12/settings" className="w-10 h-10 rounded-full overflow-hidden">
           <img 
             className="w-full h-full object-cover cursor-pointer"
