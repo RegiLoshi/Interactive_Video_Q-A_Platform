@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { HiEye, HiTrash, HiPlus } from 'react-icons/hi';
 
 const Dashboard = () => {
     const [dashboardStats] = useState({
@@ -28,6 +29,10 @@ const Dashboard = () => {
         }
     ]);
 
+    const handleDelete = (surveyId) => {
+        console.log('Deleting survey:', surveyId);
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
@@ -39,12 +44,12 @@ const Dashboard = () => {
                     to="/dashboard/create-survey"
                     className="bg-blue-600 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
                 >
-                    <span className="text-xl leading-none mb-0.5">+</span>
+                    <HiPlus className="text-xl" />
                     Create New Survey
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 j">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <p className="text-gray-600 text-sm mb-2">Total Surveys</p>
                     <p className="text-2xl font-semibold">{dashboardStats.totalSurveys}</p>
@@ -71,21 +76,16 @@ const Dashboard = () => {
                                             to={`/dashboard/surveys/${survey.id}`}
                                             className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 flex items-center gap-2"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                            </svg>
+                                            <HiEye className="h-5 w-5" />
                                             View
                                         </Link>
-                                        <Link 
-                                            to={`/dashboard/surveys/${survey.id}/edit`}
-                                            className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200 flex items-center gap-2"
+                                        <button 
+                                            onClick={() => handleDelete(survey.id)}
+                                            className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200 flex items-center gap-2"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                            </svg>
-                                            Edit
-                                        </Link>
+                                            <HiTrash className="h-5 w-5" />
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>

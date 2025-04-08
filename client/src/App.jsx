@@ -8,11 +8,12 @@ import PasswordResetPage from './components/auth pages/PasswordResetPage';
 import RequestNewPassword from './components/auth pages/RequestNewPassword'
 import DashboardLayout from './components/dashboard/DashboardLayout'
 import Dashboard from './components/dashboard/Dashboard'
-import MyProfile from './components/dashboard/MyProfile';
 import SettingsPage from './components/userPages/SettingsPage';
 import ProtectedRoute from './components/auth pages/ProtectedRoute';
 import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
+import SurveyResponses from './components/surveys/SurveyResponses';
+import CreateSurveyPage from './components/userPages/CreateSurveyPage';
 
 function App() {
   const token = useUserStore((state) => state.token);
@@ -33,13 +34,12 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard/>} />
-            <Route path="create-survey" element={<div>Create Survey Page</div>} />
-            <Route path="surveys/:surveyId" element={<div>View Survey</div>} />
+            <Route path="create-survey" element={<CreateSurveyPage />} />
+            <Route path="surveys/:surveyId" element={<SurveyResponses />} />
             <Route path="surveys/:surveyId/edit" element={<div>Edit Survey</div>} />
           </Route>
           <Route path="/user/:id" element={<DashboardLayout />}>
             <Route path='settings' element={<SettingsPage/>} />
-            <Route index element={<MyProfile/>} />
           </Route>
         </Route>
       </Routes>
