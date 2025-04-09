@@ -1,5 +1,5 @@
 import './App.css'
-import {React} from "react";
+import React from "react";
 import AuthLayout from "./components/auth pages/AuthLayout"
 import LogIn  from './components/auth pages/LogIn';
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -14,7 +14,7 @@ import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
 import SurveyResponses from './components/surveys/SurveyResponses';
 import CreateSurveyPage from './components/userPages/CreateSurveyPage';
-
+import SurveyResponse from './components/userPages/SurveyResponse'
 function App() {
   const token = useUserStore((state) => state.token);
 
@@ -36,7 +36,7 @@ function App() {
             <Route index element={<Dashboard/>} />
             <Route path="create-survey" element={<CreateSurveyPage />} />
             <Route path="surveys/:surveyId" element={<SurveyResponses />} />
-            <Route path="surveys/:surveyId/edit" element={<div>Edit Survey</div>} />
+            <Route path="surveys/:surveyId/:userId" element={<SurveyResponse />} />
           </Route>
           <Route path="/user/:id" element={<DashboardLayout />}>
             <Route path='settings' element={<SettingsPage/>} />

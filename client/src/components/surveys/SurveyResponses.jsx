@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft, HiSearch, HiChevronDown, HiEye } from 'react-icons/hi';
-
 const SurveyResponses = () => {
-    useParams(); 
+    const {surveyId} = useParams();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState('All Dates');
@@ -124,6 +123,7 @@ const SurveyResponses = () => {
                                         ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                                         hover:bg-blue-50
                                     `}
+                                    onClick={() => navigate(`/dashboard/surveys/${surveyId}/${response.id}`)}
                                 >
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-3">
