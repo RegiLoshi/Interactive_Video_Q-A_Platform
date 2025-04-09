@@ -26,3 +26,5 @@ dist-ssr
 
 client/.env
 server/.env
+
+client/assets/videoDummy1.mp4
