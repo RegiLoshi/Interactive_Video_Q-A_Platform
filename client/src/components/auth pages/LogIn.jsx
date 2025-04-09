@@ -8,7 +8,6 @@ import Swal from 'sweetalert2'
 const LogIn = () => {
   const setUser = useUserStore((state) => state.setUser);
   const setToken = useUserStore((state) => state.setToken);
-  const setRefreshToken = useUserStore((state) => state.setRefreshToken);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,6 +37,7 @@ const LogIn = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        credentials: 'include', 
       });
       
       const result = await response.json();
@@ -45,13 +45,13 @@ const LogIn = () => {
       if (response.status === 200) {
         setUser(result.user);
         setToken(result.token);
-        setRefreshToken(result.refreshToken);
+        
+        navigate('/dashboard');
+        
         Swal.fire({
           title: "Success",
           text: "You have successfully logged in",
           icon: "success"
-        }).then(() => {
-          navigate('/dashboard');
         });
       } else {
         Swal.fire({
@@ -63,7 +63,7 @@ const LogIn = () => {
     } catch (error) {
       Swal.fire({
         title: "Failure",
-        text: "Internal error",
+        text: `Internal error: ${error.message || 'Unknown error'}`,
         icon: "error"
       });
     }

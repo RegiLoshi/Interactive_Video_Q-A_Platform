@@ -6,6 +6,7 @@ import useUserStore from '../../stores/userStore';
 const CreateSurveyPage = () => {
     const navigate = useNavigate();
     const user = useUserStore((state) => state.user);
+    const token = useUserStore((state) => state.token);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [questions, setQuestions] = useState([
@@ -54,7 +55,33 @@ const CreateSurveyPage = () => {
     };
 
     const handleSubmit = async (e) => {
-       console.log(title, description, questions);
+       e.preventDefault();
+       try {
+           const res = await fetch('http://localhost:3000/survey', {
+               method: 'POST',
+               headers: {
+                 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${token}`
+               },
+               body: JSON.stringify({
+                   title,
+                   description,
+                   questions,
+                   authorId: user?.user_id
+               }),
+               credentials: 'include', 
+           });
+           
+           if (!res.ok) {
+               throw new Error(`HTTP error! status: ${res.status}`);
+           }
+           
+           const data = await res.json();
+           console.log("Survey created:", data);
+           navigate('/dashboard');
+       } catch (error) {
+           console.error("Error creating survey:", error);
+       }
     };
 
     return (

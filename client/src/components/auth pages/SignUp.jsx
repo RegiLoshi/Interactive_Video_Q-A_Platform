@@ -14,8 +14,7 @@ const SignUp = () => {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    dateOfBirth: ""
+    confirmPassword: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -43,7 +42,7 @@ const SignUp = () => {
       return;
     }
 
-    const { confirmPassword, ...dataToSend } = formData;
+    const { confirmPassword: _, ...dataToSend } = formData;
     
     try {
       const response = await fetch('http://localhost:3000/signup', {
@@ -52,8 +51,8 @@ const SignUp = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(dataToSend),
+        credentials: 'include',
       });
-      
       const result = await response.json();
       
       if (response.status === 201) {
@@ -73,6 +72,7 @@ const SignUp = () => {
         });
       }
     } catch (error) {
+      console.error("Sign up error:", error);
       await Swal.fire({
         title: "Error",
         text: "An error occurred while creating your account",
@@ -139,23 +139,6 @@ const SignUp = () => {
         {errors.email && (
           <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
             {errors.email}
-          </p>
-        )}
-      </div>
-
-      <div className='w-full'>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-        <input
-          type="date"
-          id="dateOfBirth"
-          name="dateOfBirth"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.dateOfBirth}
-          onChange={handleChange}
-        />
-        {errors.dateOfBirth && (
-          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
-            {errors.dateOfBirth}
           </p>
         )}
       </div>

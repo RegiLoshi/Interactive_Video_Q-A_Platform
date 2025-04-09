@@ -16,26 +16,18 @@ const SettingsPage = () => {
     });
     const navigate = useNavigate();
     const logout = useUserStore((state) => state.logout);
-    const user = useUserStore((state) => state.user);
-    const refreshToken = useUserStore((state) => state.refreshToken);
 
     const handleSignOut = async () => {
         try {
-            if (user) {
-                await fetch('http://localhost:3000/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        refreshToken: refreshToken
-                    }),
-                });
-            }
+            await fetch('http://localhost:3000/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
             
             logout();
-            
             navigate('/auth/login');
         } catch (error) {
             console.error('Error during logout:', error);

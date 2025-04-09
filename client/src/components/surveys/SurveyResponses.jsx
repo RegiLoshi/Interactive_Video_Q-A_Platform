@@ -1,8 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft, HiSearch, HiChevronDown, HiEye } from 'react-icons/hi';
+import useUserStore from '../../stores/userStore';
 const SurveyResponses = () => {
     const {surveyId} = useParams();
+    const surveys = useUserStore((state) => state.surveys);
+    const survey = surveys.filter(survey => survey.survey_id === surveyId);
+    console.log(survey)
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState('All Dates');
