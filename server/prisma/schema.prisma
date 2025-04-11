@@ -28,7 +28,7 @@ model Survey {
   created_at   DateTime       @default(now())
   authorId     String
   questions    Question[]
-  author       User           @relation("UserSurveys", fields: [authorId], references: [user_id])
+  author       User           @relation("UserSurveys", fields: [authorId], references: [user_id], onDelete: Cascade)
   surveyVideos Survey_Video[]
 }
 
@@ -39,8 +39,8 @@ model Question {
   question_id String         @id @default(uuid())
   surveyId    String
   answers     Answer[]
-  author      User     @relation("UserQuestions", fields: [authorId], references: [user_id])
-  survey      Survey   @relation(fields: [surveyId], references: [survey_id])
+  author      User     @relation("UserQuestions", fields: [authorId], references: [user_id], onDelete: Cascade)
+  survey      Survey   @relation(fields: [surveyId], references: [survey_id], onDelete: Cascade)
 }
 
 model Answer {
@@ -50,8 +50,8 @@ model Answer {
   questionId String
   surveyId   String
   text       String
-  author     User     @relation(fields: [authorId], references: [user_id])
-  question   Question @relation(fields: [questionId], references: [question_id])
+  author     User     @relation(fields: [authorId], references: [user_id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [question_id], onDelete: Cascade)
 }
 
 model Survey_Video {
@@ -59,8 +59,8 @@ model Survey_Video {
   question_link   String
   surveyId        String
   uploaderId      String
-  survey          Survey @relation(fields: [surveyId], references: [survey_id])
-  uploader        User   @relation(fields: [uploaderId], references: [user_id])
+  survey          Survey @relation(fields: [surveyId], references: [survey_id], onDelete: Cascade)
+  uploader        User   @relation(fields: [uploaderId], references: [user_id], onDelete: Cascade)
 }
 
 enum Role {

@@ -12,7 +12,7 @@ import SettingsPage from './components/userPages/SettingsPage';
 import ProtectedRoute from './components/auth pages/ProtectedRoute';
 import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
-import SurveyResponses from './components/surveys/SurveyResponses';
+import SurveyRespondents from './components/surveys/SurveyRespondents';
 import CreateSurveyPage from './components/userPages/CreateSurveyPage';
 import SurveyResponse from './components/userPages/SurveyResponse'
 import AnswerSurvey from './components/surveys/AnswerSurvey';
@@ -36,7 +36,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route index element={<Dashboard/>} />
             <Route path="create-survey" element={<CreateSurveyPage />} />
-            <Route path="surveys/:surveyId" element={<SurveyResponses />} />
+            <Route path="surveys/:surveyId" element={<SurveyRespondents />} />
             <Route path="surveys/:surveyId/:userId" element={<SurveyResponse />} />
             <Route path="surveys/:surveyId/answer" element={<AnswerSurvey />} />
           </Route>

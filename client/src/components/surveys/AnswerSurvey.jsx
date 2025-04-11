@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft, HiArrowRight, HiCheckCircle } from 'react-icons/hi';
 import useUserStore from '../../stores/userStore';
 import WebcamStreamCapture from '../WebCam';
+import axiosInstance from '../../api/axios.js'
 
 const AnswerSurvey = () => {
     const { surveyId } = useParams();
@@ -30,9 +31,9 @@ const AnswerSurvey = () => {
 
         if(survey.questions && user) {
             for(let i = 0; i < survey.questions.length; i++) {
-                if(survey.questions[i]?.answer && 
-                   survey.questions[i]?.answer[0] && 
-                   survey.questions[i]?.answer[0]?.authorId === user.user_id) {
+                if(survey.questions[i]?.answers && 
+                   survey.questions[i]?.answers[0] && 
+                   survey.questions[i]?.answers[0]?.authorId === user.user_id) {
                     setAlreadyAnswered(true);
                     break;
                 }
@@ -42,6 +43,7 @@ const AnswerSurvey = () => {
         const savedProgress = localStorage.getItem(`survey_progress_${surveyId}_${user.user_id}`);
         if (savedProgress) {
             try {
+                // in local storage, there will be answers array of objects along with current index
                 const { answers: savedAnswers, currentIndex } = JSON.parse(savedProgress);
                 setAnswers(savedAnswers);
                 setCurrentQuestionIndex(currentIndex);
@@ -103,41 +105,28 @@ const AnswerSurvey = () => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
+            console.log(answers)      
+
             const formattedAnswers = Object.entries(answers).map(([questionId, text]) => ({
                 questionId,
                 text,
                 surveyId: survey.survey_id,
-                authorId: user.user_id
+                authorId: user.user_id,
             }));
 
-            const formData = new FormData();
-            formData.append('answers', JSON.stringify(formattedAnswers));
-            
             if (video) {
-                formData.append('video', video);
+                formattedAnswers.append('video', video);
             }
 
-            console.log(formData)
+            const response = await axiosInstance.post('/answer',formattedAnswers);
 
-            const response = await fetch('http://localhost:3000/answer', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData,
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
+            if (response.status != 201) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             localStorage.removeItem(`survey_progress_${surveyId}_${user.user_id}`);
             
             setSubmitted(true);
-            setTimeout(() => {
-                navigate('/dashboard');
-            }, 2000);
         } catch (error) {
             console.error('Error submitting survey answers:', error);
             alert('Failed to submit answers. Please try again.');
@@ -225,6 +214,12 @@ const AnswerSurvey = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[70vh] bg-gray-50 px-4">
                 <h1 className="text-3xl font-bold text-gray-800 mb-4">You have already answered this survey.</h1>
+                <button
+                        onClick={() => navigate('/dashboard')}
+                        className="px-6 py-3 blue-button transition-colors duration-200 font-medium"
+                    >
+                        Return to Dashboard
+                    </button>
             </div>
         );
     }
@@ -270,7 +265,7 @@ const AnswerSurvey = () => {
                             name="answer"
                             rows="6"
                             value={answers[currentQuestion?.question_id] || ''}
-                            onChange={(e) => handleAnswerChange(currentQuestion?.question_id, e.target.value)}
+                            onChange={(e) => handleAnswerChange(currentQuestion.question_id, e.target.value)}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#101726] focus:border-transparent resize-none"
                             placeholder="Type your response here..."
                         />

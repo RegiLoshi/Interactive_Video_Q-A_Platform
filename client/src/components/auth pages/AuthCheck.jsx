@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useUserStore from '../../stores/userStore';
+import axiosInstance from '../../api/axios';
 
 const AuthCheck = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const token = useUserStore((state) => state.token);
   const user = useUserStore((state) => state.user);
+  const isLoggedOut = useUserStore((state) => state.isLoggedOut);
 
   useEffect(() => {
     if (location.pathname.startsWith('/auth/')) {
@@ -14,25 +16,14 @@ const AuthCheck = () => {
     }
 
     const checkAuth = async () => {
-      if (!token) {
+      if (!token && !isLoggedOut) {
         try {
-          const response = await fetch('http://localhost:3000/refresh', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include', 
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
+          const { data } = await axiosInstance.post('/refresh');
           
           if (data.token && data.user) {
             useUserStore.getState().setToken(data.token);
             useUserStore.getState().setUser(data.user);
+            useUserStore.getState().setLoggedOut(false);
           } else {
             throw new Error('Invalid response data');
           }
@@ -41,11 +32,13 @@ const AuthCheck = () => {
           useUserStore.getState().logout();
           navigate('/auth/login');
         }
+      } else if (!token && isLoggedOut) {
+        navigate('/auth/login');
       }
     };
 
     checkAuth();
-  }, [token, user, navigate, location.pathname]);
+  }, [token, user, navigate, location.pathname, isLoggedOut]);
 
   return null;
 };

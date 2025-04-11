@@ -1,46 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router"
-import { HiArrowLeft} from 'react-icons/hi';
+import { HiArrowLeft } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../api/axios';
 import video from '../../../assets/videoDummy1.mp4'
-const defaultSurvey = {
-    title: "Customer Feedback Survey",
-    totalResponses: 1,
-    submissionDate: "March 15, 2024",
-    questions: [
-        {
-            id: 1,
-            text: "How satisfied are you with our service?",
-            answer: "Et sint adipisicing est magna id duis pariatur duis et excepteur nulla Lorem excepteur veniam. Mollit eu velit laborum voluptate aliquip qui. Irure ut nisi cupidatat exercitation dolore incididunt minim enim. Dolor pariatur enim exercitation aliquip incididunt eu aliqua anim. Anim cupidatat labore do tempor cillum laborum in. Enim minim et officia aliquip ad fugiat eu magna reprehenderit in in eiusmod. Ullamco cupidatat anim nisi ullamco.Officia occaecat aliquip quis mollit sit sunt nulla irure consequat. Occaecat duis id nisi ea enim eu consequat occaecat deserunt sunt eiusmod. Anim voluptate fugiat Lorem amet elit officia deserunt ut aliquip enim duis adipisicing et. Nisi laborum do laboris irure eiusmod deserunt labore. Irure minim aute cillum et exercitation dolor.Lorem quis cillum ipsum laborum consectetur quis. Reprehenderit excepteur elit proident quis pariatur id amet duis deserunt quis laborum. Cupidatat do aute ipsum sit tempor consectetur ex laboris aliquip. Proident anim ut veniam dolore sint occaecat elit. Ipsum eu ipsum ex Lorem velit dolore sint eiusmod qui enim. Mollit excepteur veniam est veniam et eiusmod sit irure ipsum ex eiusmod nostrud. Ad magna laboris id labore tempor est cupidatat.Enim cupidatat enim consectetur culpa cillum. In esse ex tempor minim sit magna consectetur voluptate labore exercitation id laboris. Exercitation commodo laborum labore et minim aliquip anim aute anim. Esse reprehenderit laboris minim ipsum occaecat dolor. Amet nisi aliquip veniam consectetur laborum nisi elit ut.Enim magna non non voluptate Lorem officia nisi elit exercitation proident veniam nostrud cupidatat. Consequat fugiat et do officia aute irure ea irure officia exercitation qui laborum. Esse voluptate occaecat ut eu incididunt ex Lorem Lorem. Excepteur ipsum occaecat aute aliqua commodo dolor eu do ut occaecat pariatur proident irure sit.Quis sit enim ullamco minim. Deserunt aute officia eu proident incididunt. Do quis amet cillum incididunt mollit ipsum ut nisi tempor veniam minim. Tempor laborum quis dolore anim velit in sint.Voluptate ea labore duis veniam nisi consequat deserunt. Id elit laborum irure veniam. Elit eu mollit et duis cillum ipsum laboris consectetur cillum ullamco nulla pariatur. Officia duis consequat adipisicing dolor magna proident aliqua consectetur officia.Aute minim nisi reprehenderit nulla excepteur ex fugiat occaecat nisi proident dolore. Magna mollit culpa excepteur voluptate culpa cillum aliqua amet labore reprehenderit. Aute nisi est labore dolore ad nulla dolore adipisicing nostrud. Ullamco ipsum nisi qui voluptate nulla ea do et laborum consequat dolor et ea.Enim reprehenderit velit anim sit ullamco laborum. Veniam culpa eiusmod proident laboris. Aute sunt ea minim ad quis veniam dolor sit in irure. Voluptate ex laboris laborum incididunt anim minim nulla eu voluptate pariatur exercitation. Tempor dolore proident adipisicing amet nostrud dolore ex veniam aliqua ullamco.Qui consequat enim do dolor esse magna est occaecat nisi deserunt labore nulla occaecat amet. Ipsum tempor eiusmod dolor id laboris ullamco Lorem. Quis nisi voluptate laboris in nostrud."
-        },
-        {
-            id: 2,
-            text: "How likely are you to recommend us to others?",
-            answer: "Extremely Likely"
-        },
-        {
-            id: 3,
-            text: "What could we improve?",
-            answer: "Faster response times"
-        },
-        {
-            id: 4,
-            text: "How often do you use our service?",
-            answer: "Weekly"
-        },
-        {
-            id: 5,
-            text: "What features do you value most?",
-            answer: "User-friendly interface and customer support"
-        }
-    ],
-    video: video
-};
 
 const SurveyResponse = () => {
-    const {surveyId} = useParams();
+    const { surveyId } = useParams();
     const navigate = useNavigate();
-    
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [surveyData, setSurveyData] = useState(null);
+    const [respondents, setRespondents] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                // Fetch survey data
+                const surveyResponse = await axiosInstance.get(`/survey/${surveyId}`);
+                setSurveyData(surveyResponse.data);
+
+                // Fetch respondents
+                const respondentsResponse = await axiosInstance.get(`/answer/${surveyId}`);
+                setRespondents(respondentsResponse.data);
+            } catch (err) {
+                setError('Failed to load survey data');
+                console.error('Error fetching data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [surveyId]);
+
+    if (loading) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading survey data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!surveyData) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-600 mb-4">Survey not found</p>
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex flex-col space-y-8">
             <div className="flex items-center mb-8">
@@ -55,37 +92,95 @@ const SurveyResponse = () => {
                     Back
                 </button>
                 <div className="ml-6">
-                    <h1 className="text-2xl font-semibold text-gray-800">{defaultSurvey.title}</h1>
+                    <h1 className="text-2xl font-semibold text-gray-800">{surveyData.title}</h1>
+                    <p className="text-gray-600">Total Respondents: {respondents.length}</p>
                 </div>
             </div>
 
-            <span className='text-sm text-[#818488]'>Submitted on {defaultSurvey.submissionDate}</span>
-
-            <div className='flex flex-col space-y-4'>
-                <h2 className='text-md font-bold'>Survey Responses</h2>
-
-                {defaultSurvey.questions.map(question => (
-                    <div key={question.id} className='flex flex-col p-6 bg-white rounded-lg shadow-sm space-y-3'>
-                        <span className="text-gray-700 font-bold">{question.text}</span>
-                        <div className="p-4 bg-gray-50 rounded-lg shadow-lg">
-                            <span className="text-gray-800">{question.answer}</span>
-                        </div>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr className="bg-gray-50">
+                                <th scope="col" className="px-6 py-4 text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Respondent</span>
+                                    </div>
+                                </th>
+                                <th scope="col" className="px-6 py-4 text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Submission Date</span>
+                                    </div>
+                                </th>
+                                <th scope="col" className="px-6 py-4 text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                            {respondents.map((respondent, index) => (
+                                <tr 
+                                    key={respondent.author.user_id} 
+                                    className={`
+                                        transition-colors duration-200
+                                        ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                                        hover:bg-blue-50
+                                    `}
+                                >
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                <span className="text-gray-600 font-medium">
+                                                    {respondent.author.name.charAt(0)}{respondent.author.last_name.charAt(0)}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-900">
+                                                    {respondent.author.name} {respondent.author.last_name}
+                                                </div>
+                                                <div className="text-sm text-gray-500">{respondent.author.email}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900">
+                                            {new Date(respondent.created_at).toLocaleDateString()}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button 
+                                            onClick={() => navigate(`/dashboard/surveys/${surveyId}/${respondent.author.user_id}`)}
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 
+                                                     rounded-lg hover:bg-blue-100 transition-colors duration-200
+                                                     font-medium text-sm focus:outline-none focus:ring-2 
+                                                     focus:ring-blue-500 focus:ring-offset-2"
+                                        >
+                                            View Responses
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {respondents.length === 0 && (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 text-sm">No respondents found</p>
                     </div>
-                ))}
-            </div>
-
-            <div>
-                {defaultSurvey.video && (
-                    <div className='w-full flex flex-col space-y-4 items-start'>
-                        <h2 className='font-bold text-xl'>Video</h2>
-                        <video controls className="w-full shadow-md">
-                            <source src={defaultSurvey.video} type="video/mp4" />
-                            </video>
-                        </div>
                 )}
             </div>
 
-
+            {surveyData.surveyVideos && surveyData.surveyVideos.length > 0 && (
+                <div className='w-full flex flex-col space-y-4 items-start'>
+                    <h2 className='font-bold text-xl'>Video</h2>
+                    <video controls className="w-full shadow-md">
+                        <source src={video} type="video/mp4" />
+                    </video>
+                </div>
+            )}
         </div>
     );
 }

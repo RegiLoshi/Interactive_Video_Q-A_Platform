@@ -1,35 +1,45 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft, HiSearch, HiChevronDown, HiEye } from 'react-icons/hi';
-import useUserStore from '../../stores/userStore';
-const SurveyResponses = () => {
-    const {surveyId} = useParams();
-    const surveys = useUserStore((state) => state.surveys);
-    const survey = surveys.filter(survey => survey.survey_id === surveyId);
-    console.log(survey)
+import axiosInstance from '../../api/axios';
+
+const SurveyRespondents = () => {
+    const { surveyId } = useParams();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState('All Dates');
+    const [surveyData, setSurveyData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [authors, setAuthors] = useState([]);
 
-    const [surveyData] = useState({
-        title: 'Customer Satisfaction Survey 2025',
-        totalResponses: 247,
-        responses: Array.from({ length: 50 }, (_, index) => ({
-            id: index + 1,
-            respondent: {
-                name: index % 2 === 0 ? 'John Cooper' : 'Sarah Miller',
-                avatar: `https://ui-avatars.com/api/?name=${index % 2 === 0 ? 'John+Cooper' : 'Sarah+Miller'}&background=random`
-            },
-            submissionDate: `Jan ${15 - (index % 7)}, 2025 ${14 - (index % 12)}:${30 - (index % 30)}`
-        }))
-    });
+    useEffect(() => {
+        const fetchSurveyData = async () => {
+            try {
+                setLoading(true);
+                const { data } = await axiosInstance.get(`/survey/${surveyId}`);
+                setAuthors((await axiosInstance.get(`/survey/${surveyId}/responses`)).data);
+                setSurveyData(data);
+                setError(null);
+            } catch (err) {
+                setError('Failed to load survey data');
+                console.error('Error fetching survey:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSurveyData();
+    }, [surveyId]);
 
     const filteredResponses = useMemo(() => {
-        return surveyData.responses.filter(response => {
-            const matchesSearch = response.respondent.name.toLowerCase().includes(searchQuery.toLowerCase());
+        if (!authors) return [];
+        
+        return authors.filter(response => {
+            const matchesSearch = response.author?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
             
             let matchesDate = true;
-            const responseDate = new Date(response.submissionDate);
+            const responseDate = new Date(response.created_at);
             const today = new Date();
             
             if (dateFilter === 'Last 7 Days') {
@@ -42,7 +52,50 @@ const SurveyResponses = () => {
 
             return matchesSearch && matchesDate;
         });
-    }, [surveyData.responses, searchQuery, dateFilter]);
+    }, [authors, searchQuery, dateFilter]);
+
+    if (loading) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading survey data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!surveyData) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-600 mb-4">Survey not found</p>
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
@@ -59,7 +112,7 @@ const SurveyResponses = () => {
                 </button>
                 <div className="ml-6">
                     <h1 className="text-2xl font-semibold text-gray-800">{surveyData.title}</h1>
-                    <p className="text-gray-600">Total Responses: {filteredResponses.length}</p>
+                    <p className="text-gray-600">Total Respondents: {authors.length}</p>
                 </div>
             </div>
 
@@ -121,29 +174,33 @@ const SurveyResponses = () => {
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {filteredResponses.map((response, index) => (
                                 <tr 
-                                    key={response.id} 
+                                    key={response.author.user_id} 
                                     className={`
                                         transition-colors duration-200
                                         ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                                         hover:bg-blue-50
                                     `}
-                                    onClick={() => navigate(`/dashboard/surveys/${surveyId}/${response.id}`)}
+                                    onClick={() => navigate(`/dashboard/surveys/${surveyId}/${response.author.user_id}`)}
                                 >
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-3">
-                                            <img 
-                                                src={response.respondent.avatar} 
-                                                alt={response.respondent.name}
-                                                className="w-10 h-10 rounded-full ring-2 ring-white shadow-sm"
-                                            />
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                <span className="text-gray-600 font-medium">
+                                                    {response.author?.name?.charAt(0)}{response.author?.last_name?.charAt(0)}
+                                                </span>
+                                            </div>
                                             <div>
-                                                <div className="font-medium text-gray-900">{response.respondent.name}</div>
-                                                <div className="text-sm text-gray-500">Respondent #{response.id}</div>
+                                                <div className="font-medium text-gray-900">
+                                                    {response.author?.name} {response.author?.last_name}
+                                                </div>
+                                                <div className="text-sm text-gray-500">{response.author?.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">{response.submissionDate}</div>
+                                        <div className="text-sm text-gray-900">
+                                            {new Date(response.created_at).toLocaleDateString()}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <button 
@@ -164,7 +221,7 @@ const SurveyResponses = () => {
                 
                 {filteredResponses.length === 0 && (
                     <div className="text-center py-12">
-                        <p className="text-gray-500 text-sm">No responses found</p>
+                        <p className="text-gray-500 text-sm">No respondents found</p>
                     </div>
                 )}
             </div>
@@ -172,4 +229,4 @@ const SurveyResponses = () => {
     );
 };
 
-export default SurveyResponses; 
+export default SurveyRespondents; 

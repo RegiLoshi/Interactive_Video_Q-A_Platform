@@ -18,8 +18,11 @@ app.get("/", (req, res) => {
 
 app.get("/users", authenticate_token, logInController.getUsers);
 app.get("/survey", authenticate_token, surveyController.getSurveys);
+app.get("/survey/:id", authenticate_token, surveyController.getSurveysID);
 app.post("/survey", authenticate_token, surveyController.addSurvey);
+app.delete("/survey", authenticate_token, surveyController.deleteSurvey);
 app.post("/answer", authenticate_token, answerController.addAnswer);
+app.get("/survey/:id/responses", authenticate_token, answerController.getAnswers);
 app.post("/signup", logInController.signUp);
 app.post("/login", logInController.logIn);
 app.post("/refresh", logInController.refreshToken);

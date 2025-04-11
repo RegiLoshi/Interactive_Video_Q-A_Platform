@@ -1,14 +1,13 @@
 import prismaClient from "../config/prismaClient.js"
 const addAnswer = async (req, res) => {
     console.log(req.body)
-    const { answers, surveyId, userId } = req.body;
-
-    console.log(answers);
-    console.log(surveyId);
-    console.log(userId);
+    const answers = req.body;
 
     try {
-        return res.status(201).json(answers);
+        const createdAnswers = await prismaClient.answer.createMany({
+                data: answers
+            })
+        return res.status(201).json(createdAnswers);
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -17,4 +16,33 @@ const addAnswer = async (req, res) => {
     }
 }
 
-export default { addAnswer };
+const getAnswers = async (req, res) => {
+    const {surveyId} = req.params;
+    try {
+        const uniqueUsers = await prismaClient.answer.findMany({
+            where: {
+                surveyId: surveyId
+            },
+            select: {
+                created_at: true,
+                author: {
+                    select: {
+                        user_id: true,
+                        name: true,
+                        last_name: true,
+                        email: true
+                    }
+                }
+            },
+            distinct: ['authorId']
+        });
+        return res.status(200).json(uniqueUsers);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Error fetching unique users"
+        });
+    }
+}
+
+export default { addAnswer,getAnswers};

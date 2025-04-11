@@ -7,6 +7,7 @@ import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/userStore";
 import { HiArrowLeft } from "react-icons/hi";
+import axiosInstance from '../../api/axios';
 
 const SettingsPage = () => {
     const [activeSection, setActiveSection] = useState('account');
@@ -16,21 +17,19 @@ const SettingsPage = () => {
     });
     const navigate = useNavigate();
     const logout = useUserStore((state) => state.logout);
+    const setLoggedOut = useUserStore((state) => state.setLoggedOut);
 
     const handleSignOut = async () => {
         try {
-            await fetch('http://localhost:3000/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
+            await axiosInstance.post('/logout', {}, {
+                withCredentials: true
             });
-            
+            setLoggedOut(true);
             logout();
             navigate('/auth/login');
         } catch (error) {
             console.error('Error during logout:', error);
+            setLoggedOut(true);
             logout();
             navigate('/auth/login');
         }

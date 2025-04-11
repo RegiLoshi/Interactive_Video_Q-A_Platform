@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiPlus, HiTrash, HiArrowLeft } from 'react-icons/hi';
 import useUserStore from '../../stores/userStore';
-
+import axiosInstance from '../../api/axios.js'
+import Swal from 'sweetalert2'
 const CreateSurveyPage = () => {
     const navigate = useNavigate();
     const user = useUserStore((state) => state.user);
@@ -57,27 +58,22 @@ const CreateSurveyPage = () => {
     const handleSubmit = async (e) => {
        e.preventDefault();
        try {
-           const res = await fetch('http://localhost:3000/survey', {
-               method: 'POST',
-               headers: {
-                 'Content-Type': 'application/json',
-                 'Authorization': `Bearer ${token}`
-               },
-               body: JSON.stringify({
-                   title,
-                   description,
-                   questions,
-                   authorId: user?.user_id
-               }),
-               credentials: 'include', 
-           });
+           const res = await axiosInstance.post('/survey', 
+           {title, description, questions, authorId: user?.user_id }
+           );
            
-           if (!res.ok) {
+           if (res.status != 201) {
                throw new Error(`HTTP error! status: ${res.status}`);
            }
+
+           Swal.fire({
+            title: "Success",
+            text: "You have successfully created a survey!",
+            icon: "success",
+          });
+
            
-           const data = await res.json();
-           console.log("Survey created:", data);
+        
            navigate('/dashboard');
        } catch (error) {
            console.error("Error creating survey:", error);

@@ -4,7 +4,14 @@ const getSurveys = async (req, res) => {
     try { 
         const surveys = await prismaClient.survey.findMany({
             include: {
-                questions: true,
+                questions: {
+                    select:{
+                        question_id: true,
+                        answers: true,
+                        title: true,
+                        category: true,
+                    }
+                },
                 author: {
                     select: {
                         name: true,
@@ -25,6 +32,10 @@ const getSurveys = async (req, res) => {
 
 const addSurvey = async (req, res) => {
     const {title, description, questions, authorId} = req.body;
+    if(authorId != req.user.user_id)
+    return res.status(403).json({
+        message: "Not authorized"
+    });
     
     try { 
         const survey = await prismaClient.survey.create({
@@ -40,13 +51,6 @@ const addSurvey = async (req, res) => {
                     }))
                 }
             },
-            include: {
-                questions: {
-                    include: {
-                        answer: true
-                    }
-                }
-            }
         });
 
         return res.status(201).json(survey); 
@@ -58,4 +62,49 @@ const addSurvey = async (req, res) => {
     }
 }
 
-export default {getSurveys, addSurvey};
+const deleteSurvey = async (req,res) => {
+    const {surveyId, userId} = req.body;
+    if(userId != req.user.user_id)
+    return res.status(403).json({
+        message: "Not authorized"
+    });
+    try { 
+        await prismaClient.survey.delete({
+            where:{
+                survey_id: surveyId,
+                authorId: userId
+            }
+        })
+        return res.status(200); 
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal Server Error while fetching users"
+        });
+    }
+}
+
+const getSurveysID = async (req,res) => {
+    const {id} = req.params;
+    try {
+        const survey = await prismaClient.survey.findUnique({
+            where: {survey_id: id},
+            include: {
+                author: true,
+                questions: true,
+                surveyVideos: true
+            }
+        });
+        return res.status(200).json(survey);
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal Server Error while fetching users"
+        });
+    }
+}   
+
+
+
+export default {getSurveys, addSurvey, deleteSurvey,getSurveysID};

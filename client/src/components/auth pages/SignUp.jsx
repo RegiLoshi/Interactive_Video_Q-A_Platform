@@ -4,6 +4,7 @@ import useUserStore from '../../stores/userStore';
 import signUpSchema from '../../validations/signUpSchema.js';
 import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
+import axiosInstance from '../../api/axios';
 
 const SignUp = () => {
   const setUser = useUserStore((state) => state.setUser);
@@ -45,37 +46,21 @@ const SignUp = () => {
     const { confirmPassword: _, ...dataToSend } = formData;
     
     try {
-      const response = await fetch('http://localhost:3000/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
-        credentials: 'include',
-      });
-      const result = await response.json();
+      const { data } = await axiosInstance.post('/signup', dataToSend);
       
-      if (response.status === 201) {
-        setUser(result.user);
-        setToken(result.token);
-        await Swal.fire({
-          title: "Success",
-          text: "Account created successfully!",
-          icon: "success"
-        });
-        navigate('/dashboard');
-      } else {
-        await Swal.fire({
-          title: "Error",
-          text: result.message || "Something went wrong",
-          icon: "error"
-        });
-      }
+      setUser(data.user);
+      setToken(data.token);
+      
+      await Swal.fire({
+        title: "Success",
+        text: "Account created successfully!",
+        icon: "success"
+      });
+      navigate('/dashboard');
     } catch (error) {
-      console.error("Sign up error:", error);
       await Swal.fire({
         title: "Error",
-        text: "An error occurred while creating your account",
+        text: error.response?.data?.message || "An error occurred while creating your account",
         icon: "error"
       });
     }

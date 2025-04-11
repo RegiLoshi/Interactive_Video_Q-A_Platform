@@ -2,32 +2,22 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HiEye, HiTrash, HiPlus, HiPencil } from 'react-icons/hi';
 import useUserStore from '../../stores/userStore';
-
+import axiosInstance from '../../api/axios';
+import { useState } from 'react';
+import Swal from 'sweetalert2';
 const Dashboard = () => {
     const surveys = useUserStore((state) => state.surveys);
     const setSurvey = useUserStore((state) => state.setSurvey)
     const user = useUserStore((state) => state.user);
     const token = useUserStore((state) => state.token);
-
+    const [rerender, setRerender] = useState(false);
     useEffect(() => {
         const fetchSurveys = async () => {
             if (!token) return;
             
             try {
-                const response = await fetch('http://localhost:3000/survey', {
-                    method: 'GET',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    },
-                    credentials: 'include', 
-                  });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
+                const { data } = await axiosInstance.get('/survey');
+                console.log(data)
                 
                 const filteredSurveys = user?.role === 'ASKER' 
                     ? data.filter(survey => survey.authorId === user.user_id) 
@@ -40,11 +30,35 @@ const Dashboard = () => {
         };
 
         fetchSurveys();
-    }, [user, token]);
+    }, [user, token, setSurvey]);
 
-    const handleDelete = (surveyId) => {
-        if (user?.role !== 'ASKER') return;
-        console.log('Deleting survey:', surveyId);
+    const handleDelete = async (surveyId) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You won\'t be able to revert this!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await axiosInstance.delete('/survey',{data: {surveyId, userId: user.user_id}});
+                    const { data } = await axiosInstance.get('/survey');
+                    const filteredSurveys = user?.role === 'ASKER' 
+            ? data.filter(survey => survey.authorId === user.user_id) 
+            : data;
+                setSurvey(filteredSurveys);
+                setRerender(!rerender);
+                } catch (error) {
+                    console.error('Error deleting survey:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error deleting survey',
+                        icon: 'error',
+                    });
+                }
+            }
+        });
     };
 
     return (
@@ -52,7 +66,7 @@ const Dashboard = () => {
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
-                    <p className="text-gray-600">Welcome back, {user?.name}</p>
+                    <p className="text-gray-600">Welcome back, {user?.name + " " + user?.last_name}</p>
                 </div>
                 {user?.role === 'ASKER' && (
                     <Link 
