@@ -91,7 +91,11 @@ const getSurveysID = async (req,res) => {
             where: {survey_id: id},
             include: {
                 author: true,
-                questions: true,
+                questions: {
+                    include: {
+                        answers: true
+                    }
+                },
                 surveyVideos: true
             }
         });

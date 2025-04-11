@@ -45,4 +45,5 @@ const getAnswers = async (req, res) => {
     }
 }
 
+
 export default { addAnswer,getAnswers};

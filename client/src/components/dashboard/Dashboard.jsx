@@ -17,7 +17,6 @@ const Dashboard = () => {
             
             try {
                 const { data } = await axiosInstance.get('/survey');
-                console.log(data)
                 
                 const filteredSurveys = user?.role === 'ASKER' 
                     ? data.filter(survey => survey.authorId === user.user_id) 

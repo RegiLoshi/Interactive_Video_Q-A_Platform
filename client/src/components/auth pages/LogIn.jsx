@@ -121,12 +121,6 @@ const LogIn = () => {
         <span>Don't have an account?</span>
         <Link className='font-bold cursor-pointer' to='/auth/signup'>Sign up</Link>
       </div>
-      
-      <div className="flex items-center justify-center space-x-2 text-gray-600 mt-4">
-        <FaUserNinja className="text-xl text-[#0F1828]" />
-        <span>Want to try first?</span>
-        <p className="text-[#0F1828] font-bold cursor-pointer">Continue as guest</p>
-      </div>
     </form>
   );
 };

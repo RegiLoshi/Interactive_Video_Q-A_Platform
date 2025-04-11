@@ -14,7 +14,7 @@ import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
 import SurveyRespondents from './components/surveys/SurveyRespondents';
 import CreateSurveyPage from './components/userPages/CreateSurveyPage';
-import SurveyResponse from './components/userPages/SurveyResponse'
+import SurveyResponse from './components/surveys/SurveyResponse'
 import AnswerSurvey from './components/surveys/AnswerSurvey';
 function App() {
   const token = useUserStore((state) => state.token);

@@ -194,19 +194,35 @@ const refreshToken = async (req, res) => {
     try {
         const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
         
-        const userPayload = {
-            user_id: decoded.user_id,
-            email: decoded.email,
-            role: decoded.role
-        };
+        // Fetch complete user data from database
+        const user = await prismaClient.user.findUnique({
+            where: {
+                user_id: decoded.user_id
+            },
+            select: {
+                user_id: true,
+                name: true,
+                last_name: true,
+                email: true,
+                role: true
+            }
+        });
 
-        console.log(userPayload);
+        if (!user) {
+            return res.status(403).json({
+                message: "User not found"
+            });
+        }
 
-        const access_token = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"});
+        const access_token = jwt.sign({
+            user_id: user.user_id,
+            email: user.email,
+            role: user.role
+        }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"});
         
         return res.status(200).json({
             message: "Token refreshed successfully!",
-            user: userPayload,
+            user: user,
             token: access_token
         });
     } catch(error) {
@@ -363,5 +379,6 @@ const logoutUser = async (req, res) => {
         });
     }
 };
+
 
 export default { logIn, signUp, getUsers, refreshToken, requestPassword, resetPassword, logoutUser };

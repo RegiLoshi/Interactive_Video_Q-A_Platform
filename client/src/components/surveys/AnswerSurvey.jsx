@@ -11,7 +11,8 @@ const AnswerSurvey = () => {
     const user = useUserStore((state) => state.user);
     const token = useUserStore((state) => state.token);
     const surveys = useUserStore((state) => state.surveys);
-    const survey = surveys.find((s) => s.survey_id === surveyId);
+    //const survey = surveys.find((s) => s.survey_id === surveyId);
+    const [survey, setSurvey] = useState(null);
     
     const [answers, setAnswers] = useState({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -23,41 +24,52 @@ const AnswerSurvey = () => {
     const [alreadyAnswered, setAlreadyAnswered] = useState(false);
 
     useEffect(() => {
-        if (!survey || !token) {
-            navigate('/dashboard');
-            return;
-        }
-        
-
-        if(survey.questions && user) {
-            for(let i = 0; i < survey.questions.length; i++) {
-                if(survey.questions[i]?.answers && 
-                   survey.questions[i]?.answers[0] && 
-                   survey.questions[i]?.answers[0]?.authorId === user.user_id) {
-                    setAlreadyAnswered(true);
-                    break;
-                }
-            }
-        }
-        
-        const savedProgress = localStorage.getItem(`survey_progress_${surveyId}_${user.user_id}`);
-        if (savedProgress) {
+        const fetchSurvey = async () => {
             try {
-                // in local storage, there will be answers array of objects along with current index
-                const { answers: savedAnswers, currentIndex } = JSON.parse(savedProgress);
-                setAnswers(savedAnswers);
-                setCurrentQuestionIndex(currentIndex);
+                if (!token) {
+                    navigate('/dashboard');
+                    return;
+                }
+
+                const response = await axiosInstance.get(`/survey/${surveyId}`);
+                
+                if (!response.data) {
+                    throw new Error('No survey data received');
+                }
+
+                setSurvey(response.data);
+
+                if (response.data.questions && user) {
+                    const hasAnswered = response.data.questions.some(question => 
+                        question.answers?.some(answer => answer.authorId === user.user_id)
+                    );
+                    setAlreadyAnswered(hasAnswered);
+                }
+                
+                const savedProgress = localStorage.getItem(`survey_progress_${surveyId}_${user.user_id}`);
+                if (savedProgress) {
+                    try {
+                        const { answers: savedAnswers, currentIndex } = JSON.parse(savedProgress);
+                        setAnswers(savedAnswers);
+                        setCurrentQuestionIndex(currentIndex);
+                    } catch (error) {
+                        console.error('Error loading saved progress:', error);
+                    }
+                } else if (response.data?.questions) {
+                    const initialAnswers = {};
+                    response.data.questions.forEach(question => {
+                        initialAnswers[question.question_id] = '';
+                    });
+                    setAnswers(initialAnswers);
+                }
             } catch (error) {
-                console.error('Error loading saved progress:', error);
+                console.error('Error fetching survey:', error);
+                navigate('/dashboard');
             }
-        } else if (survey?.questions) {
-            const initialAnswers = {};
-            survey.questions.forEach(question => {
-                initialAnswers[question.question_id] = '';
-            });
-            setAnswers(initialAnswers);
-        }
-    }, [survey, navigate, token, surveyId, user]);
+        };
+
+        fetchSurvey();
+    }, [surveyId, user, token, navigate]);
 
     useEffect(() => {
         if (survey && user && !submitted) {

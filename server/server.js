@@ -3,7 +3,7 @@ import logInController from "./controller/authController.js"
 import authenticate_token from "./middlewares/authenticateToken.js"
 import answerController from "./controller/answerController.js"
 import surveyController from "./controller/surveyController.js"
-
+import userController from "./controller/userController.js"
 const PORT = process.env.PORT || 3000;
 
 
@@ -29,6 +29,7 @@ app.post("/refresh", logInController.refreshToken);
 app.post("/logout", logInController.logoutUser);
 app.post("/requestPassword", logInController.requestPassword);
 app.post("/resetPassword", logInController.resetPassword);
+app.get("/users/:id", authenticate_token, userController.getUser);
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
