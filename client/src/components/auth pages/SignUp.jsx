@@ -4,6 +4,7 @@ import useUserStore from '../../stores/userStore';
 import signUpSchema from '../../validations/signUpSchema.js';
 import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
+import axiosInstance from '../../api/axios';
 
 const SignUp = () => {
   const setUser = useUserStore((state) => state.setUser);
@@ -14,8 +15,7 @@ const SignUp = () => {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    dateOfBirth: ""
+    confirmPassword: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -43,39 +43,24 @@ const SignUp = () => {
       return;
     }
 
-    const { confirmPassword, ...dataToSend } = formData;
+    const { confirmPassword: _, ...dataToSend } = formData;
     
     try {
-      const response = await fetch('http://localhost:3000/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
+      const { data } = await axiosInstance.post('/signup', dataToSend);
+      
+      setUser(data.user);
+      setToken(data.token);
+      
+      await Swal.fire({
+        title: "Success",
+        text: "Account created successfully!",
+        icon: "success"
       });
-      
-      const result = await response.json();
-      
-      if (response.status === 201) {
-        setUser(result.user);
-        setToken(result.token);
-        await Swal.fire({
-          title: "Success",
-          text: "Account created successfully!",
-          icon: "success"
-        });
-        navigate('/dashboard');
-      } else {
-        await Swal.fire({
-          title: "Error",
-          text: result.message || "Something went wrong",
-          icon: "error"
-        });
-      }
+      navigate('/dashboard');
     } catch (error) {
       await Swal.fire({
         title: "Error",
-        text: "An error occurred while creating your account",
+        text: error.response?.data?.message || "An error occurred while creating your account",
         icon: "error"
       });
     }
@@ -139,23 +124,6 @@ const SignUp = () => {
         {errors.email && (
           <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
             {errors.email}
-          </p>
-        )}
-      </div>
-
-      <div className='w-full'>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-        <input
-          type="date"
-          id="dateOfBirth"
-          name="dateOfBirth"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.dateOfBirth}
-          onChange={handleChange}
-        />
-        {errors.dateOfBirth && (
-          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
-            {errors.dateOfBirth}
           </p>
         )}
       </div>

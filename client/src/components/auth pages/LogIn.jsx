@@ -4,11 +4,11 @@ import useUserStore from '../../stores/userStore';
 import loginSchema from '../../validations/loginSchema.js'
 import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2'
+import axiosInstance from '../../api/axios';
 
 const LogIn = () => {
   const setUser = useUserStore((state) => state.setUser);
   const setToken = useUserStore((state) => state.setToken);
-  const setRefreshToken = useUserStore((state) => state.setRefreshToken);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,42 +28,25 @@ const LogIn = () => {
       setErrors(errorMessages);
       return;
     }
-
-    const data = { email, password };
     
     try {
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      const { data } = await axiosInstance.post('/login', { email, password });
+      
+      setUser(data.user);
+      setToken(data.token);
+      
+      navigate('/dashboard');
+      
+      Swal.fire({
+        title: "Success",
+        text: "You have successfully logged in",
+        icon: "success"
       });
-      
-      const result = await response.json();
-      
-      if (response.status === 200) {
-        setUser(result.user);
-        setToken(result.token);
-        setRefreshToken(result.refreshToken);
-        Swal.fire({
-          title: "Success",
-          text: "You have successfully logged in",
-          icon: "success"
-        }).then(() => {
-          navigate('/dashboard');
-        });
-      } else {
-        Swal.fire({
-          title: "Failure",
-          text: result.message,
-          icon: "error"
-        });
-      }
     } catch (error) {
+      console.log(error);
       Swal.fire({
         title: "Failure",
-        text: "Internal error",
+        text: error.response?.data?.message || "An error occurred",
         icon: "error"
       });
     }
@@ -137,12 +120,6 @@ const LogIn = () => {
         <FaUserPlus className="text-xl text-[#0F1828]" />
         <span>Don't have an account?</span>
         <Link className='font-bold cursor-pointer' to='/auth/signup'>Sign up</Link>
-      </div>
-      
-      <div className="flex items-center justify-center space-x-2 text-gray-600 mt-4">
-        <FaUserNinja className="text-xl text-[#0F1828]" />
-        <span>Want to try first?</span>
-        <p className="text-[#0F1828] font-bold cursor-pointer">Continue as guest</p>
       </div>
     </form>
   );

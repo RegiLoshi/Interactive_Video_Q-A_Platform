@@ -41,50 +41,71 @@ REQUEST EXAMPLE:
 
 const signUp = async (req, res) => {
     console.log(req.body);
-    const { name, lastName, email, password, dateOfBirth } = req.body;
+    const { name, lastName, email, password } = req.body;
 
-    const existingUser = await prismaClient.user.findUnique({
-        where:{
-            email: email
-        }
-    })
+    try {
+        const result = await prismaClient.$transaction(async (prisma) => {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    email: email
+                }
+            });
 
-    if(existingUser){
-        return res.status(400).json({
-            message: "Email already in use!"
+            if (existingUser) {
+                throw new Error("Email already in use!");
+            }
+
+            const salt = await bcrypt.genSalt();
+            const hashed_password = await bcrypt.hash(password, salt);
+
+
+            const created_user = await prisma.user.create({
+                data: {
+                    name,
+                    last_name: lastName,
+                    email,
+                    password: hashed_password,
+                    role: "RESPONDER"
+                }
+            });
+
+            return created_user;
         });
-    }
 
-    const salt = await bcrypt.genSalt();
+        const userPayload = {
+            user_id: result.user_id,
+            email: result.email,
+            role: result.role
+        };
 
-    const hashed_password = await bcrypt.hash(password, salt);
+        const access_token = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
+        const refresh_token = jwt.sign(userPayload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'});
 
-    const user = {
-        name,
-        last_name : lastName,
-        email,
-        hashed_password,
-        date_of_birth: new Date(dateOfBirth)
-    };
+        res.cookie('refreshToken', refresh_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            sameSite: 'strict'
+        });
 
-    try{
+        const { password: _, ...userWithoutPassword } = result;
 
-    const created_user = await prismaClient.user.create({
-        data: user
-    });
+        return res.status(201).json({
+            message: "User created successfully!",
+            user: userWithoutPassword,
+            token: access_token
+        });
 
-    delete created_user.hashed_password;
-
-    return res.status(201).json({
-        message: "User created successfully!",
-        user: created_user
-    });
-
-    } catch(error){
+    } catch(error) {
         console.log(error);
+        if (error.message === "Email already in use!") {
+            return res.status(400).json({
+                message: error.message
+            });
+        }
         return res.status(500).json({
             message: "Internal Server Error"
-        })
+        });
     }
 }
 
@@ -102,18 +123,17 @@ REQUEST EXAMPLE:
 const logIn = async (req, res) => {
     const {email, password} = req.body;
     try {
-        const user = await prismaClient.user.findUnique({
+        const user = await prismaClient.user.findFirst({
             where: {
                 email: email
             },
             select: {
-                id: true,
+                user_id: true,
                 name: true,
                 last_name: true,
                 email: true,
                 role: true,
-                date_of_birth: true,
-                hashed_password: true
+                password: true
             }
         });
 
@@ -123,10 +143,10 @@ const logIn = async (req, res) => {
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.hashed_password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if(isMatch) {
             const userPayload = {
-                id: user.id,
+                user_id: user.user_id,
                 email: user.email,
                 role: user.role
             };
@@ -134,23 +154,19 @@ const logIn = async (req, res) => {
             const access_token = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
             const refresh_token = jwt.sign(userPayload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'});
 
-            const hashed_refresh_token = bcrypt.hashSync(refresh_token, 10);
-
-            await prismaClient.refresh_Token.create({
-                data: {
-                    user_id: user.id,
-                    hashed_token: hashed_refresh_token,
-                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                },
+            res.cookie('refreshToken', refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                sameSite: 'strict'
             });
 
-            const { hashed_password, ...userWithoutPassword } = user;
+            const { password: _, ...userWithoutPassword } = user;
 
             return res.status(200).json({
                 message: "User logged in!",
                 user: userWithoutPassword,
-                token: access_token,
-                refreshToken: refresh_token
+                token: access_token
             });
         } else {
             return res.status(401).json({
@@ -166,7 +182,8 @@ const logIn = async (req, res) => {
 }
 
 const refreshToken = async (req, res) => {
-    const refresh_token = req.body.refreshToken;
+    // Get refresh token from cookie
+    const refresh_token = req.cookies.refreshToken;
 
     if(!refresh_token){
         return res.status(403).json({
@@ -177,37 +194,36 @@ const refreshToken = async (req, res) => {
     try {
         const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
         
-        const storedRefreshToken = await prismaClient.refresh_Token.findFirst({
+        // Fetch complete user data from database
+        const user = await prismaClient.user.findUnique({
             where: {
-                user_id: decoded.id,
-                revoked: false,
-                expiresAt: { gte: new Date() }
+                user_id: decoded.user_id
+            },
+            select: {
+                user_id: true,
+                name: true,
+                last_name: true,
+                email: true,
+                role: true
             }
         });
 
-        if (!storedRefreshToken) {
-            return res.status(403).json({ message: "Invalid or expired refresh token" });
+        if (!user) {
+            return res.status(403).json({
+                message: "User not found"
+            });
         }
 
-        const isTokenValid = await bcrypt.compare(refresh_token, storedRefreshToken.hashed_token);
-
-        if (!isTokenValid) {
-            return res.status(403).json({ message: "Invalid refresh token" });
-        }
-
-        const userPayload = {
-            id: decoded.id,
-            email: decoded.email,
-            role: decoded.role
-        };
-
-        const access_token = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"});
+        const access_token = jwt.sign({
+            user_id: user.user_id,
+            email: user.email,
+            role: user.role
+        }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m"});
         
         return res.status(200).json({
             message: "Token refreshed successfully!",
-            user: userPayload,
-            token: access_token,
-            refreshToken: refresh_token
+            user: user,
+            token: access_token
         });
     } catch(error) {
         console.log(error);
@@ -346,43 +362,12 @@ const resetPassword = async (req, res) => {
 
 const logoutUser = async (req, res) => {
     try {
-        const userId = req.body.userId;
-        const refreshToken = req.body.refreshToken;
-
-        if (!userId) {
-            return res.status(400).json({
-                message: "User ID is required"
-            });
-        }
-
-        if (refreshToken) {
-            try {
-                const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-                
-                await prismaClient.refresh_Token.updateMany({
-                    where: {
-                        user_id: userId,
-                        revoked: false,
-                        expiresAt: { gte: new Date() }
-                    },
-                    data: {
-                        revoked: true
-                    }
-                });
-            } catch (error) {
-                console.log("Error verifying token during logout:", error);
-            }
-        } else {
-            await prismaClient.refresh_Token.updateMany({
-                where: {
-                    user_id: userId,
-                    revoked: false
-                },
-                data: {
-                    revoked: true
-                }
-            });
-        }
+        // Clear the refresh token cookie
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
 
         return res.status(200).json({
             message: "Logged out successfully"
@@ -394,5 +379,6 @@ const logoutUser = async (req, res) => {
         });
     }
 };
+
 
 export default { logIn, signUp, getUsers, refreshToken, requestPassword, resetPassword, logoutUser };

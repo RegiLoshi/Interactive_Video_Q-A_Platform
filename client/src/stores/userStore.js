@@ -6,11 +6,13 @@ const useUserStore = create(
     (set) => ({
       user: null,
       token: null,
-      refreshToken: null,
+      surveys: [],
+      isLoggedOut: false,
       setUser: (user) => set({ user }),
       setToken: (token) => set({ token }),
-      setRefreshToken: (refreshToken) => set({ refreshToken }),
-      logout: () => set({ user: null, token: null, refreshToken: null }),
+      setSurvey: (surveys) => set({ surveys }),
+      setLoggedOut: (isLoggedOut) => set({ isLoggedOut }),
+      logout: () => set({ user: null, token: null, isLoggedOut: true }),
     }),
     {
       name: 'user-storage', 

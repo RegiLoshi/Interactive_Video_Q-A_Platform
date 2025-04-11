@@ -1,5 +1,5 @@
 import './App.css'
-import {React} from "react";
+import React from "react";
 import AuthLayout from "./components/auth pages/AuthLayout"
 import LogIn  from './components/auth pages/LogIn';
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -8,15 +8,14 @@ import PasswordResetPage from './components/auth pages/PasswordResetPage';
 import RequestNewPassword from './components/auth pages/RequestNewPassword'
 import DashboardLayout from './components/dashboard/DashboardLayout'
 import Dashboard from './components/dashboard/Dashboard'
-import ExplorePage from './components/dashboard/ExplorePage'
-import AskAQuestionPage from './components/userPages/AskAQuestionPage';
-import MyProfile from './components/dashboard/MyProfile';
 import SettingsPage from './components/userPages/SettingsPage';
-import QuestionPage from './components/questions/QuestionPage'
 import ProtectedRoute from './components/auth pages/ProtectedRoute';
 import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
-
+import SurveyRespondents from './components/surveys/SurveyRespondents';
+import CreateSurveyPage from './components/userPages/CreateSurveyPage';
+import SurveyResponse from './components/surveys/SurveyResponse'
+import AnswerSurvey from './components/surveys/AnswerSurvey';
 function App() {
   const token = useUserStore((state) => state.token);
 
@@ -33,18 +32,19 @@ function App() {
           <Route path="requestNewPassword" element={<RequestNewPassword />} />
         </Route>
 
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route path="/dashboard" element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
             <Route index element={<Dashboard/>} />
-            <Route path='explore' element={<ExplorePage/>} />
+            <Route path="create-survey" element={<CreateSurveyPage />} />
+            <Route path="surveys/:surveyId" element={<SurveyRespondents />} />
+            <Route path="surveys/:surveyId/:userId" element={<SurveyResponse />} />
+            <Route path="surveys/:surveyId/answer" element={<AnswerSurvey />} />
           </Route>
-          <Route path="/user/:id" element={<DashboardLayout />}>
-            <Route path='askQuestion' element={<AskAQuestionPage/>} />
+        </Route>
+        
+        <Route path="/user/:id" element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
             <Route path='settings' element={<SettingsPage/>} />
-            <Route index element={<MyProfile/>} />
-          </Route>
-          <Route path='/question/:id' element={<DashboardLayout />}>
-            <Route index element={<QuestionPage/>} />
           </Route>
         </Route>
       </Routes>

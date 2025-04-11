@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,98 +8,68 @@ datasource db {
 }
 
 model User {
-  id              String      @id @default(uuid())
-  name            String
-  last_name       String  
-  email           String      @unique
-  hashed_password String
-  date_of_birth   DateTime
-  liked_categories CategoryEnum[]  @relation("UserLikedCategories")
-  role            Role        @default(USER)
-  authored_questions Question[]    @relation("AuthoredQuestions")
-  authored_answers Answer[]        @relation("AuthoredAnswers")
-  bookmarked_questions Question[]  @relation("bookmarkedQuestionByUsers")
-  bookmarked_answers Answer[]      @relation("bookmarkedAnswerByUsers")
-  liked_questions Question[]       @relation("likedQuestionByUsers")
-  liked_answers Answer[]           @relation("likedAnswerByUsers")
-  subscribed_questions Question[]  @relation("subsribedQuestions")
-  refresh_tokens Refresh_Token[]
-  password_token Password_Reset_Token[] 
+  email        String         @unique
+  name         String
+  last_name    String
+  role         Role           @default(RESPONDER)
+  created_at   DateTime       @default(now())
+  password     String         @default("")
+  user_id      String         @id @default(uuid())
+  answers      Answer[]
+  questions    Question[]     @relation("UserQuestions")
+  surveys      Survey[]       @relation("UserSurveys")
+  surveyVideos Survey_Video[]
+}
+
+model Survey {
+  survey_id    String         @id @default(uuid())
+  title        String
+  description  String
+  created_at   DateTime       @default(now())
+  authorId     String
+  questions    Question[]
+  author       User           @relation("UserSurveys", fields: [authorId], references: [user_id], onDelete: Cascade)
+  surveyVideos Survey_Video[]
 }
 
 model Question {
-  id              String      @id @default(uuid())
-  author          User        @relation(name: "AuthoredQuestions", fields: [author_id], references: [id])
-  author_id       String      
-  title           String
-  description     String?
-  isVideo         Boolean
-  category        CategoryEnum @relation(fields: [category_id], references: [id])
-  category_id     String
-  created_at      DateTime    @default(now())
-  shareable_link  String
-  answers         Answer[]    @relation("Answers")
-  bookedmarked_users User[]   @relation("bookmarkedQuestionByUsers")
-  liked_users     User[]      @relation("likedQuestionByUsers")
-  subscribedUsers User[]      @relation("subsribedQuestions")
+  title       String
+  authorId    String
+  category    Category
+  question_id String         @id @default(uuid())
+  surveyId    String
+  answers     Answer[]
+  author      User     @relation("UserQuestions", fields: [authorId], references: [user_id], onDelete: Cascade)
+  survey      Survey   @relation(fields: [surveyId], references: [survey_id], onDelete: Cascade)
 }
 
 model Answer {
-  id              String      @id @default(uuid())
-  author          User        @relation(name: "AuthoredAnswers", fields: [author_id], references: [id])
-  author_id       String   
-  question        Question    @relation(name: "Answers", fields: [question_id], references: [id])
-  question_id     String   
-  response_type   Response_type
-  text_answer     String?
-  video_url       String?
-  created_at      DateTime    @default(now())
-  bookedmarked_users User[]   @relation("bookmarkedAnswerByUsers")
-  liked_users     User[]      @relation("likedAnswerByUsers")
+  created_at DateTime @default(now())
+  answer_Id  String         @id @default(uuid())
+  authorId   String
+  questionId String
+  surveyId   String
+  text       String
+  author     User     @relation(fields: [authorId], references: [user_id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [question_id], onDelete: Cascade)
 }
 
-model CategoryEnum {
-  id              String      @id @default(uuid())
-  name            CategoryType
-  users           User[]      @relation("UserLikedCategories")
-  questions       Question[] 
-}
-
-model Refresh_Token {
-  id              String      @id @default(uuid())
-  user            User        @relation(fields: [user_id], references: [id])
-  user_id         String
-  hashed_token    String
-  expiresAt       DateTime
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt 
-  revoked         Boolean     @default(false) 
-}
-
-model Password_Reset_Token {
-  id              String      @id @default(uuid())
-  user            User        @relation(fields: [user_id], references: [id])
-  user_id         String      @unique
-  hashed_token    String
-  createdAt       DateTime    @default(now())
+model Survey_Video {
+  servey_video_id String         @id @default(uuid())
+  question_link   String
+  surveyId        String
+  uploaderId      String
+  survey          Survey @relation(fields: [surveyId], references: [survey_id], onDelete: Cascade)
+  uploader        User   @relation(fields: [uploaderId], references: [user_id], onDelete: Cascade)
 }
 
 enum Role {
-  USER 
+  ASKER
+  RESPONDER
   ADMIN
 }
 
-enum Response_type {
-  VIDEO
-  TEXT
-}
-
-enum Like_type {
-  LIKE
-  DISLIKE
-}
-
-enum CategoryType {
+enum Category {
   TECHNOLOGY
   PROGRAMMING
   WEB_DEVELOPMENT
@@ -115,49 +79,5 @@ enum CategoryType {
   MACHINE_LEARNING
   CYBERSECURITY
   CLOUD_COMPUTING
-  DEVOPS
-  DATABASES
-  BLOCKCHAIN
-  HEALTH_AND_MEDICINE
-  MENTAL_HEALTH
-  PHYSICAL_FITNESS
-  NUTRITION
-  BUSINESS
-  ENTREPRENEURSHIP
-  MARKETING
-  FINANCE
-  INVESTING
-  CAREER_ADVICE
-  EDUCATION
-  LANGUAGES
-  MATHEMATICS
-  SCIENCE
-  PHYSICS
-  CHEMISTRY
-  BIOLOGY
-  ASTRONOMY
-  ENVIRONMENTAL_SCIENCE
-  HISTORY
-  POLITICS
-  LAW
-  PHILOSOPHY
-  PSYCHOLOGY
-  SOCIOLOGY
-  ARTS_AND_CULTURE
-  MUSIC
-  LITERATURE
-  FILM_AND_TELEVISION
-  GAMING
-  TRAVEL
-  COOKING
-  FASHION
-  RELATIONSHIPS
-  PARENTING
-  HOME_IMPROVEMENT
-  GARDENING
-  PETS
-  AUTOMOTIVE
-  SPORTS
-  DIY_AND_CRAFTS
-  PHOTOGRAPHY
+  MEDICINE
 }

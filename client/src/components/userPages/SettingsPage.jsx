@@ -6,6 +6,8 @@ import { FiHelpCircle } from "react-icons/fi";
 import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/userStore";
+import { HiArrowLeft } from "react-icons/hi";
+import axiosInstance from '../../api/axios';
 
 const SettingsPage = () => {
     const [activeSection, setActiveSection] = useState('account');
@@ -15,29 +17,19 @@ const SettingsPage = () => {
     });
     const navigate = useNavigate();
     const logout = useUserStore((state) => state.logout);
-    const user = useUserStore((state) => state.user);
-    const refreshToken = useUserStore((state) => state.refreshToken);
+    const setLoggedOut = useUserStore((state) => state.setLoggedOut);
 
     const handleSignOut = async () => {
         try {
-            if (user) {
-                await fetch('http://localhost:3000/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        refreshToken: refreshToken
-                    }),
-                });
-            }
-            
+            await axiosInstance.post('/logout', {}, {
+                withCredentials: true
+            });
+            setLoggedOut(true);
             logout();
-            
             navigate('/auth/login');
         } catch (error) {
             console.error('Error during logout:', error);
+            setLoggedOut(true);
             logout();
             navigate('/auth/login');
         }
@@ -101,6 +93,17 @@ const SettingsPage = () => {
     return (
         <main className="w-full min-h-screen bg-[#f8fbfb]">
             <div className="max-w-7xl mx-auto p-6">
+                <button 
+                    onClick={() => navigate('/dashboard')}
+                    className="mb-6 px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
+                             bg-white text-gray-700 hover:bg-gray-50 
+                             flex items-center gap-2 transition-colors duration-200
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                    <HiArrowLeft className="w-5 h-5" />
+                    Back to Dashboard
+                </button>
+
                 <div className="mb-8">
                     <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
                     <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
