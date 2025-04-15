@@ -10,7 +10,7 @@ const AnswerSurvey = () => {
     const navigate = useNavigate();
     const user = useUserStore((state) => state.user);
     const token = useUserStore((state) => state.token);
-    const surveys = useUserStore((state) => state.surveys);
+    // const surveys = useUserStore((state) => state.surveys);
     //const survey = surveys.find((s) => s.survey_id === surveyId);
     const [survey, setSurvey] = useState(null);
     
@@ -117,7 +117,7 @@ const AnswerSurvey = () => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            console.log(answers)      
+            const formData = new FormData();
 
             const formattedAnswers = Object.entries(answers).map(([questionId, text]) => ({
                 questionId,
@@ -126,18 +126,23 @@ const AnswerSurvey = () => {
                 authorId: user.user_id,
             }));
 
+            formData.append('answers', JSON.stringify(formattedAnswers));
+
             if (video) {
-                formattedAnswers.append('video', video);
+                formData.append('video', video, 'video.mp4');
             }
 
-            const response = await axiosInstance.post('/answer',formattedAnswers);
+            const response = await axiosInstance.post('/answer', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
-            if (response.status != 201) {
+            if (response.status !== 201) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             localStorage.removeItem(`survey_progress_${surveyId}_${user.user_id}`);
-            
             setSubmitted(true);
         } catch (error) {
             console.error('Error submitting survey answers:', error);

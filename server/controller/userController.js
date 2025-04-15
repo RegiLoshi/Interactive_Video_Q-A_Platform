@@ -10,7 +10,8 @@ const getUser = async (req,res) => {
             select: {
                 email: true,
                 name: true,
-                last_name: true
+                last_name: true,
+                user_id: true,
             }
         })
         console.log(user);

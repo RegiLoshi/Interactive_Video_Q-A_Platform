@@ -3,6 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft } from 'react-icons/hi';
 import axiosInstance from '../../api/axios';
 import useUserStore from '../../stores/userStore'; 
+
+// Utility function to convert Google Drive URL to embeddable URL
+const convertGoogleDriveUrl = (url) => {
+    if (!url) return null;
+    const fileId = url.match(/\/d\/(.+?)\//)?.[1];
+    if (!fileId) return null;
+    return `https://drive.google.com/file/d/${fileId}/preview?embedded=true`;
+};
+
 const SurveyResponse = () => {
     const { surveyId, userId } = useParams();
     const navigate = useNavigate();
@@ -11,6 +20,7 @@ const SurveyResponse = () => {
     const surveys = useUserStore((state) => state.surveys);
     const [survey, setSurvey] = useState(surveys.find((survey) => survey.survey_id == surveyId));
     const [responder, setResponder] = useState();
+    const [videoUrl, setVideoUrl] = useState();
     const questions = survey.questions;
     const questionsAndAnswers = questions.map((question) => {
         const userAnswer = question.answers.find(answer => answer.authorId === userId);
@@ -32,8 +42,9 @@ const SurveyResponse = () => {
 
                 const responder = (await axiosInstance.get(`/users/${userId}`)).data;
                 setResponder(responder);
-                console.log(survey);
-                
+                const videoUrl = await axiosInstance.get(`/survey/${surveyId}/responses/${responder.user_id}`);
+                setVideoUrl(videoUrl.data);
+                console.log(videoUrl.data);
                 setError(null);
             } catch (err) {
                 setError('Failed to load survey data');
@@ -143,6 +154,19 @@ const SurveyResponse = () => {
                         </div>
                     </div>
                 ))}
+                {videoUrl && (
+                    <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                        <iframe
+                            src={convertGoogleDriveUrl(videoUrl)}
+                            width="100%"
+                            height="480"
+                            allow="autoplay"
+                            className="rounded-lg"
+                            frameBorder="0"
+                            allowFullScreen
+                        />
+                    </div>
+                )}
             </div>
 
             {questionsAndAnswers.length === 0 && (
