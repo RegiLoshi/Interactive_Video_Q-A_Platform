@@ -2,7 +2,7 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { BsRecordCircle, BsStopCircle, BsPauseCircle, BsPlayCircle, BsUpload, BsTrash, BsDownload } from 'react-icons/bs';
 
-const WebcamStreamCapture = ({step = 0, setStep = () => {}}) => {
+const WebcamStreamCapture = ({step = 0, setStep = () => {}, onVideoCapture}) => {
     const webcamRef = useRef(null);
     const mediaRecorderRef = useRef(null);
     const uploadLocalVideoRef = useRef(null);
@@ -105,7 +105,6 @@ const WebcamStreamCapture = ({step = 0, setStep = () => {}}) => {
   
     const handleStopCaptureClick = useCallback(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-
             mediaRecorderRef.current.stop();
             setCapturing(false);
             
@@ -115,8 +114,12 @@ const WebcamStreamCapture = ({step = 0, setStep = () => {}}) => {
             setVideo(blob);
             setVideoUploaded(true);
             setStep(step + 1);
+            // Pass the video blob back to parent
+            if (onVideoCapture) {
+                onVideoCapture(blob);
+            }
         }
-    }, [recordedChunks]);
+    }, [recordedChunks, onVideoCapture]);
 
     const handlePauseCaptureClick = useCallback(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -137,13 +140,17 @@ const WebcamStreamCapture = ({step = 0, setStep = () => {}}) => {
       uploadLocalVideoRef.current.click();
     }, []);
 
-    const handleFileChange =(event) => {
-      const file = event.target.files[0];
-      if (file) {
-        setVideo(file);
-        setVideoUploaded(true);
-        setStep(step + 1);
-      }
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setVideo(file);
+            setVideoUploaded(true);
+            setStep(step + 1);
+            // Pass the file back to parent
+            if (onVideoCapture) {
+                onVideoCapture(file);
+            }
+        }
     };
 
     const handleDownload = useCallback(() => {

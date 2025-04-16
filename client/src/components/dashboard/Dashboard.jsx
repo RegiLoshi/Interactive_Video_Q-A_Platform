@@ -65,12 +65,12 @@ const Dashboard = () => {
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
-                    <p className="text-gray-600">Welcome back, {user?.name + " " + user?.last_name}</p>
+                    <p className="text-gray-600 text-md">Welcome back, {user?.name + " " + user?.last_name}</p>
                 </div>
                 {user?.role === 'ASKER' && (
                     <Link 
                         to="/dashboard/create-survey"
-                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
+                        className="sm:px-5 bg-blue-600 text-white md:px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
                     >
                         <HiPlus className="text-xl" />
                         Create New Survey
@@ -96,7 +96,7 @@ const Dashboard = () => {
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h3 className="font-medium text-gray-800">{survey.title}</h3>
-                                        <p className="text-sm text-gray-500">Created on {survey.created_at.slice(0,10)} • {survey.responses > 0 ? survey.responses : 0} responses</p>
+                                        <p className="text-sm text-gray-500">Created on {survey.created_at.slice(0,10)} • {survey.questions[0].answers.length > 0 ? survey.questions[0].answers.length : 0} responses</p>
                                     </div>
                                     <div className="flex gap-3">
                                         <Link 
