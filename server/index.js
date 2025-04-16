@@ -7,10 +7,10 @@ import surveyController from './controller/surveyController.js';
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:5173',  
+  origin: true, // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 86400 // 24 hours
 };
@@ -20,6 +20,24 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
+// Add test endpoint
+app.get('/test-connection', (req, res) => {
+    console.log('Test connection request received');
+    res.json({ message: 'Server is accessible', timestamp: new Date().toISOString() });
+});
+
+// Add request logging middleware
+app.use((req, res, next) => {
+    console.log('Incoming request:', {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        body: req.body,
+        cookies: req.cookies,
+        ip: req.ip
+    });
+    next();
+});
 
 // Routes
 app.get("/", (req, res) => {

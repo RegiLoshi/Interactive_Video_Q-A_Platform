@@ -1,23 +1,130 @@
 import { useState } from "react";
-import { CiUser } from "react-icons/ci";
-import { IoNotificationsOutline } from "react-icons/io5";
-import { MdOutlinePrivacyTip, MdOutlineAccountCircle } from "react-icons/md";
+import { MdOutlineAccountCircle } from "react-icons/md";
 import { FiHelpCircle } from "react-icons/fi";
 import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/userStore";
 import { HiArrowLeft } from "react-icons/hi";
 import axiosInstance from '../../api/axios';
+import Swal from 'sweetalert2';
 
 const SettingsPage = () => {
+    const user = useUserStore((state) => state.user);
+    const setUser = useUserStore((state) => state.setUser);
     const [activeSection, setActiveSection] = useState('account');
-    const [notifications, setNotifications] = useState({
-        emailNotifs: true,
-        questionResponses: true
+    const [formData, setFormData] = useState({
+        name: user?.name || '',
+        lastName: user?.last_name || '',
+        oldEmail: user?.email || '',
+        newEmail: '',
+        oldPassword: '',
+        newPassword: ''
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState({});
     const navigate = useNavigate();
     const logout = useUserStore((state) => state.logout);
     const setLoggedOut = useUserStore((state) => state.setLoggedOut);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        
+        if (formData.newEmail && formData.newEmail === formData.oldEmail) {
+            newErrors.newEmail = 'New email must be different from current email';
+        }
+        
+        if (formData.newPassword && !formData.oldPassword) {
+            newErrors.oldPassword = 'Current password is required to change password';
+        }
+        
+        if (formData.newPassword && formData.newPassword.length < 6) {
+            newErrors.newPassword = 'Password must be at least 6 characters long';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSaveChanges = async () => {
+        if (!validateForm()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please fix the errors before saving',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const updates = {};
+            if (formData.name.trim() !== user.name.trim() || formData.lastName.trim() !== user.last_name.trim()) {
+                updates.name = formData.name.trim();
+                updates.last_name = formData.lastName.trim();
+            }
+            if (formData.newEmail && formData.newEmail.trim() !== user.email.trim()) {
+                updates.oldEmail = formData.oldEmail;
+                updates.newEmail = formData.newEmail.trim();
+            }
+            if (formData.newPassword) {
+                updates.oldPassword = formData.oldPassword;
+                updates.newPassword = formData.newPassword.trim();
+            }
+
+            if (Object.keys(updates).length > 0) {
+                const response = await axiosInstance.patch('/users/update-profile/'+user.user_id, updates, { withCredentials: true });
+                
+                setUser(response.data.user);
+                
+                setFormData(prev => ({
+                    ...prev,
+                    oldPassword: '',
+                    newPassword: '',
+                    newEmail: '',
+                    oldEmail: response.data.user.email
+                }));
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Profile updated successfully',
+                    confirmButtonColor: '#3085d6',
+                });
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Changes',
+                    text: 'No changes were made to save',
+                    confirmButtonColor: '#3085d6',
+                });
+            }
+        } catch (error) {
+            console.error('Error during save changes:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.response?.data?.message || 'Failed to update profile',
+                confirmButtonColor: '#3085d6',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSignOut = async () => {
         try {
@@ -35,37 +142,12 @@ const SettingsPage = () => {
         }
     };
 
-    const handleNotificationToggle = (key) => {
-        setNotifications(prev => ({
-            ...prev,
-            [key]: !prev[key]
-        }));
-    };
-
     const settingsSections = [
         {
             id: 'account',
             label: 'Account Settings',
             icon: <MdOutlineAccountCircle className="text-2xl" />,
             description: 'Manage your account details and preferences'
-        },
-        {
-            id: 'profile',
-            label: 'Profile',
-            icon: <CiUser className="text-2xl" />,
-            description: 'Update your profile information'
-        },
-        {
-            id: 'notifications',
-            label: 'Notifications',
-            icon: <IoNotificationsOutline className="text-2xl" />,
-            description: 'Configure your notification preferences'
-        },
-        {
-            id: 'privacy',
-            label: 'Privacy',
-            icon: <MdOutlinePrivacyTip className="text-2xl" />,
-            description: 'Control your privacy settings'
         },
         {
             id: 'help',
@@ -75,20 +157,6 @@ const SettingsPage = () => {
         }
     ];
 
-    const renderToggleButton = (enabled, onClick) => (
-        <button
-            onClick={onClick}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                enabled ? 'bg-blue-600' : 'bg-gray-200'
-            }`}
-        >
-            <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    enabled ? 'translate-x-6' : 'translate-x-1'
-                }`}
-            />
-        </button>
-    );
 
     return (
         <main className="w-full min-h-screen bg-[#f8fbfb]">
@@ -152,40 +220,94 @@ const SettingsPage = () => {
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                                <input 
-                                                    type="email" 
-                                                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    placeholder="your@email.com"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                                                 <input 
                                                     type="text" 
-                                                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    placeholder="username"
+                                                    name="name"
+                                                    value={formData.name}
+                                                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                        errors.name ? 'border-red-500' : ''
+                                                    }`}
+                                                    placeholder="Your name"
+                                                    onChange={handleInputChange}
                                                 />
+                                                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Surname</label>
+                                                <input 
+                                                    type="text" 
+                                                    name="lastName"
+                                                    value={formData.lastName}
+                                                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                        errors.lastName ? 'border-red-500' : ''
+                                                    }`}
+                                                    placeholder="Your surname"
+                                                    onChange={handleInputChange}
+                                                />
+                                                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Current Email</label>
+                                                <input 
+                                                    type="email" 
+                                                    name="oldEmail"
+                                                    value={formData.oldEmail}
+                                                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                        errors.oldEmail ? 'border-red-500' : ''
+                                                    }`}
+                                                    placeholder="current@email.com"
+                                                    onChange={handleInputChange}
+                                                />
+                                                {errors.oldEmail && <p className="text-red-500 text-sm mt-1">{errors.oldEmail}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">New Email</label>
+                                                <input 
+                                                    type="email" 
+                                                    name="newEmail"
+                                                    value={formData.newEmail}
+                                                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                        errors.newEmail ? 'border-red-500' : ''
+                                                    }`}
+                                                    placeholder="new@email.com"
+                                                    onChange={handleInputChange}
+                                                />
+                                                {errors.newEmail && <p className="text-red-500 text-sm mt-1">{errors.newEmail}</p>}
                                             </div>
                                         </div>
                                         <div className="border-t pt-4">
-                                            <h3 className="text-lg font-medium text-gray-900 mb-3">Password</h3>
+                                            <h3 className="text-lg font-medium text-gray-900 mb-3">Change Password</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
                                                     <input 
                                                         type="password" 
-                                                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        name="oldPassword"
+                                                        value={formData.oldPassword}
+                                                        className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                            errors.oldPassword ? 'border-red-500' : ''
+                                                        }`}
                                                         placeholder="••••••••"
+                                                        onChange={handleInputChange}
                                                     />
+                                                    {errors.oldPassword && <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>}
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                                                     <input 
                                                         type="password" 
-                                                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        name="newPassword"
+                                                        value={formData.newPassword}
+                                                        className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                            errors.newPassword ? 'border-red-500' : ''
+                                                        }`}
                                                         placeholder="••••••••"
+                                                        onChange={handleInputChange}
                                                     />
+                                                    {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
                                                 </div>
                                             </div>
                                         </div>
@@ -202,102 +324,19 @@ const SettingsPage = () => {
                                         </div>
                                     </div>
                                     <div className="flex justify-end">
-                                        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                            Save Changes
+                                        <button 
+                                            className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors ${
+                                                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}
+                                            onClick={handleSaveChanges}
+                                            disabled={isLoading}
+                                        >
+                                            {isLoading ? 'Saving...' : 'Save Changes'}
                                         </button>
                                     </div>
                                 </div>
                             )}
-
-                            {activeSection === 'profile' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h2 className="text-xl font-medium text-gray-900 mb-1">Profile Settings</h2>
-                                        <p className="text-gray-600 text-sm">Update your profile information</p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                            <input 
-                                                type="text" 
-                                                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Your full name"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-                                            <textarea 
-                                                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                rows="4"
-                                                placeholder="Tell us about yourself..."
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeSection === 'notifications' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h2 className="text-xl font-medium text-gray-900 mb-1">Notification Preferences</h2>
-                                        <p className="text-gray-600 text-sm">Choose what you want to be notified about</p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between py-3">
-                                            <div>
-                                                <h3 className="font-medium text-gray-900">Email Notifications</h3>
-                                                <p className="text-sm text-gray-500">Receive notifications via email</p>
-                                            </div>
-                                            {renderToggleButton(notifications.emailNotifs, () => handleNotificationToggle('emailNotifs'))}
-                                        </div>
-
-                                        <div className="flex items-center justify-between py-3 border-t">
-                                            <div>
-                                                <h3 className="font-medium text-gray-900">Question Responses</h3>
-                                                <p className="text-sm text-gray-500">When someone answers your question</p>
-                                            </div>
-                                            {renderToggleButton(notifications.questionResponses, () => handleNotificationToggle('questionResponses'))}
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeSection === 'privacy' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h2 className="text-xl font-medium text-gray-900 mb-1">Privacy Settings</h2>
-                                        <p className="text-gray-600 text-sm">Control your privacy and security preferences</p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between py-3">
-                                            <div>
-                                                <h3 className="font-medium text-gray-900">Show Email Address</h3>
-                                                <p className="text-sm text-gray-500">Display your email on your profile</p>
-                                            </div>
-                                            {renderToggleButton(false, () => {})}
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
+                            
                             {activeSection === 'help' && (
                                 <div className="space-y-6">
                                     <div>

@@ -21,6 +21,7 @@ const SurveyResponse = () => {
     const [survey, setSurvey] = useState(surveys.find((survey) => survey.survey_id == surveyId));
     const [responder, setResponder] = useState();
     const [videoUrl, setVideoUrl] = useState();
+    const [isVideoLoading, setIsVideoLoading] = useState(true);
     const questions = survey.questions;
     const questionsAndAnswers = questions.map((question) => {
         const userAnswer = question.answers.find(answer => answer.authorId === userId);
@@ -156,6 +157,14 @@ const SurveyResponse = () => {
                 ))}
                 {videoUrl && (
                     <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                        {isVideoLoading && (
+                            <div className="flex items-center justify-center h-[480px] bg-gray-100 rounded-lg">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                                    <p className="mt-4 text-gray-600">Loading video...</p>
+                                </div>
+                            </div>
+                        )}
                         <iframe
                             src={convertGoogleDriveUrl(videoUrl)}
                             width="100%"
@@ -164,6 +173,8 @@ const SurveyResponse = () => {
                             className="rounded-lg"
                             frameBorder="0"
                             allowFullScreen
+                            onLoad={() => setIsVideoLoading(false)}
+                            style={{ display: isVideoLoading ? 'none' : 'block' }}
                         />
                     </div>
                 )}

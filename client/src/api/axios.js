@@ -1,7 +1,9 @@
 import axios from 'axios';
 import useUserStore from '../stores/userStore';
 
-const baseURL = 'http://localhost:3000';
+const baseURL = import.meta.env.DEV 
+    ? 'http://192.168.2.61:3000'  // Your computer's IP address
+    : 'http://localhost:3000';     // Production URL
 
 const axiosInstance = axios.create({
     baseURL,

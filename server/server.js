@@ -21,7 +21,6 @@ const upload = multer({ storage,
 
 const PORT = process.env.PORT || 3000;
 
-
 app.use((req, res, next) => {
   console.log('Cookies received:', req.cookies);
   next();
@@ -46,6 +45,7 @@ app.post("/logout", logInController.logoutUser);
 app.post("/requestPassword", logInController.requestPassword);
 app.post("/resetPassword", logInController.resetPassword);
 app.get("/users/:id", authenticate_token, userController.getUser);
+app.patch("/users/update-profile/:id", authenticate_token, userController.updateProfile)
     
 // Error handler
 app.use((err, req, res, next) => {

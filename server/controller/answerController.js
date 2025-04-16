@@ -1,6 +1,7 @@
 import prismaClient from "../config/prismaClient.js"
 import { Readable } from 'stream';
 import {google} from "googleapis"
+import sendEmail from "../emailServices/emailServices.js";
 const oauth2client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -8,7 +9,6 @@ const oauth2client = new google.auth.OAuth2(
 );
 
 oauth2client.setCredentials({refresh_token: process.env.GOOGLE_REFRESH_TOKEN});
-
 const drive = google.drive({
   version: 'v3',
   auth: oauth2client
@@ -65,6 +65,34 @@ const addAnswer = async (req, res) => {
         const createdAnswers = await prismaClient.answer.createMany({
             data: answers
         });
+        const survey = await prismaClient.survey.findUnique({
+            where: {
+                survey_id: answers[0].surveyId
+            },
+            include: {
+                author: {
+                    select: {
+                        email: true,
+                        name: true
+                    }
+                }
+            }
+        });
+
+        if (!survey) {
+            throw new Error('Survey not found');
+        }
+
+
+        const emailResult = await sendEmail(
+            survey.author.email,
+            "New Survey Answer",
+            createdAnswers,
+            "surveyAnswer",
+            survey.author.name,
+            survey.title,
+        );
+        console.log(emailResult);
         return res.status(201).json({createdAnswers});
     } catch (error) {
         console.log('Error:', error);
