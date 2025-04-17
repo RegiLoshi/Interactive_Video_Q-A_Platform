@@ -31,7 +31,7 @@ const LogIn = () => {
     
     try {
       const { data } = await axiosInstance.post('/login', { email, password });
-      
+
       setUser(data.user);
       setToken(data.token);
       

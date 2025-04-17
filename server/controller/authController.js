@@ -184,7 +184,7 @@ const logIn = async (req, res) => {
 const refreshToken = async (req, res) => {
     // Get refresh token from cookie
     const refresh_token = req.cookies.refreshToken;
-
+    console.log(refresh_token)
     if(!refresh_token){
         return res.status(403).json({
             message: "Log In expired"

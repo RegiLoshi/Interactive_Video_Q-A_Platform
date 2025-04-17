@@ -1,9 +1,7 @@
 import axios from 'axios';
 import useUserStore from '../stores/userStore';
 
-const baseURL = import.meta.env.DEV 
-    ? 'http://192.168.2.61:3000'  // Your computer's IP address
-    : 'http://localhost:3000';     // Production URL
+const baseURL ='http://localhost:3000';     
 
 const axiosInstance = axios.create({
     baseURL,
@@ -38,7 +36,7 @@ axiosInstance.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                const response = await axios.post(`${baseURL}/refresh`, {}, {
+                const response = await axiosInstance.post(`${baseURL}/refresh`, {}, {
                     withCredentials: true
                 });
 
@@ -46,8 +44,7 @@ axiosInstance.interceptors.response.use(
                 
                 useUserStore.getState().setToken(token);
                 useUserStore.getState().setUser(user);
-
-                // Retry the original request with new token
+                
                 originalRequest.headers.Authorization = `Bearer ${token}`;
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
