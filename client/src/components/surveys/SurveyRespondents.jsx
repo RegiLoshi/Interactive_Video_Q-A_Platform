@@ -17,8 +17,8 @@ const SurveyRespondents = () => {
         const fetchSurveyData = async () => {
             try {
                 setLoading(true);
-                const { data } = await axiosInstance.get(`/survey/${surveyId}`);
-                setAuthors((await axiosInstance.get(`/survey/${surveyId}/responses`)).data);
+                const { data } = await axiosInstance.get(`/surveys/${surveyId}`);
+                setAuthors((await axiosInstance.get(`answers/survey/${surveyId}/responses`)).data);
                 setSurveyData(data);
                 setError(null);
             } catch (err) {

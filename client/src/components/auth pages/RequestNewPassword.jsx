@@ -2,6 +2,8 @@ import { useState } from "react";
 import { FaEnvelope, FaArrowLeft } from 'react-icons/fa';
 import { Link } from "react-router";
 import { z } from "zod";
+import Swal from "sweetalert2";
+import axiosInstance from "../../api/axios";
 
 const resetPasswordSchema = z.object({
   email: z.string()
@@ -33,22 +35,24 @@ const RequestNewPassword = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:3000/requestPassword', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      
-      const result = await response.json();
+      // const response = await fetch('http://localhost:3000/requestPassword', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ email }),
+      // });
+
+      const response = await axiosInstance.post('/auth/requestPassword',{email});
+
+      console.log(response);
       
       if (response.status === 200) {
         setRequestSent(true);
       } else {
         Swal.fire({
           title: "Failure",
-          text: result.message,
+          text: response.message,
           icon: "error"
         });
       }

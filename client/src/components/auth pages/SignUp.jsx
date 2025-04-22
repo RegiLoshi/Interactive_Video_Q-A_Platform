@@ -46,7 +46,7 @@ const SignUp = () => {
     const { confirmPassword: _, ...dataToSend } = formData;
     
     try {
-      const { data } = await axiosInstance.post('/signup', dataToSend);
+      const { data } = await axiosInstance.post('auth/signup', dataToSend);
       
       setUser(data.user);
       setToken(data.token);

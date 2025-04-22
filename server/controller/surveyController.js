@@ -23,9 +23,9 @@ const getSurveys = async (req, res) => {
         });
         return res.status(200).json(surveys); 
     } catch (error) {
-        console.log(error);
+        console.error('Error fetching surveys:', error);
         return res.status(500).json({
-            message: "Internal Server Error while fetching users"
+            message: "Error fetching surveys"
         });
     }
 };
@@ -75,11 +75,11 @@ const deleteSurvey = async (req,res) => {
                 authorId: userId
             }
         })
-        return res.status(200); 
+        return res.status(200).json({ message: "Survey deleted successfully" }); 
     } catch (error) {
-        console.log(error);
+        console.error('Error deleting survey:', error);
         return res.status(500).json({
-            message: "Internal Server Error while fetching users"
+            message: "Error deleting survey"
         });
     }
 }

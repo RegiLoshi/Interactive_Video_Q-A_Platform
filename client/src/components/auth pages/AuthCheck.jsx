@@ -18,7 +18,7 @@ const AuthCheck = () => {
     const checkAuth = async () => {
       if (!token && !isLoggedOut) {
         try {
-          const { data } = await axiosInstance.post('/refresh');
+          const { data } = await axiosInstance.post('auth/refresh');
           
           if (data.token && data.user) {
             useUserStore.getState().setToken(data.token);

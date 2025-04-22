@@ -88,6 +88,7 @@ const SettingsPage = () => {
 
             if (Object.keys(updates).length > 0) {
                 const response = await axiosInstance.patch('/users/update-profile/'+user.user_id, updates, { withCredentials: true });
+                console.log(response)
                 
                 setUser(response.data.user);
                 
@@ -128,7 +129,7 @@ const SettingsPage = () => {
 
     const handleSignOut = async () => {
         try {
-            await axiosInstance.post('/logout', {}, {
+            await axiosInstance.post('auth/logout', {}, {
                 withCredentials: true
             });
             setLoggedOut(true);

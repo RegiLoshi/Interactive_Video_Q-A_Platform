@@ -58,7 +58,7 @@ const CreateSurveyPage = () => {
     const handleSubmit = async (e) => {
        e.preventDefault();
        try {
-           const res = await axiosInstance.post('/survey', 
+           const res = await axiosInstance.post('/surveys', 
            {title, description, questions, authorId: user?.user_id }
            );
            
