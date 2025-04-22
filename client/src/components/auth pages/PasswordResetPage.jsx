@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useSearchParams } from "react-router";
 import { FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
 import { Link } from "react-router";
+import axiosInstance from '../../api/axios';
+import Swal from 'sweetalert2';
 
 const PasswordResetPage = () => {
     const [searchParams] = useSearchParams();
@@ -50,26 +52,26 @@ const PasswordResetPage = () => {
         }
         
         try {
-            const response = await fetch('http://localhost:3000/resetPassword', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    id, 
-                    token, 
-                    password 
-                }),
-            });
-            
-            const result = await response.json();
+            // const response = await fetch('http://localhost:3000/resetPassword', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({ 
+            //         id, 
+            //         token, 
+            //         password 
+            //     }),
+            // });
+
+            const response = await axiosInstance.post('/auth/resetPassword',{id,token,password});
             
             if (response.status === 200) {
                 setResetSuccess(true);
             } else {
                 Swal.fire({
                     title: "Failure",
-                    text: result.message,
+                    text: response.message,
                     icon: "error"
                   });
             }

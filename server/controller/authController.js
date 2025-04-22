@@ -184,7 +184,7 @@ const logIn = async (req, res) => {
 const refreshToken = async (req, res) => {
     // Get refresh token from cookie
     const refresh_token = req.cookies.refreshToken;
-
+    console.log(refresh_token)
     if(!refresh_token){
         return res.status(403).json({
             message: "Log In expired"
@@ -247,34 +247,14 @@ const requestPassword = async (req, res) => {
             });
         }
 
-        let token = await prismaClient.Password_Reset_Token.findFirst({
-            where: {
-                user_id: user.id
-            }
-        });
+        // Create a password reset token that expires in 1 hour
+        const resetToken = jwt.sign(
+            { user_id: user.user_id },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '1h' }
+        );
 
-        if (token) await prismaClient.Password_Reset_Token.delete({
-            where: {
-                id: token.id
-            }
-        });
-        
-        let resetToken = crypto.randomBytes(32).toString("hex");
-        const hash = await bcrypt.hash(resetToken, 10);
-
-        await prismaClient.Password_Reset_Token.create({
-            data: {
-                user: {
-                    connect: {
-                        id: user.id
-                    }
-                },
-                hashed_token: hash,
-                createdAt: new Date()
-            }
-        });
-
-        const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/passwordReset?token=${resetToken}&id=${user.id}`;
+        const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/passwordReset?token=${resetToken}`;
         
         await sendEmail(
             user.email,
@@ -298,67 +278,45 @@ const requestPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
     try {
-        const user = await prismaClient.user.findUnique({
-            where: {
-                id: req.body.id
-            }
-        });
+        const { token, password } = req.body;
 
-        if (!user) {
+        if (!token) {
             return res.status(401).json({
-                message: "User not found!",
+                message: "Reset token is required!",
             });
         }
 
-        const hash = await bcrypt.hash(req.body.token, 10);
-
-        const req_token = await prismaClient.Password_Reset_Token.findFirst({
-            where:{
-                user_id: req.body.id
-            }
-        })
-
-        if(!req_token){
-            return res.status(401).json({
-                message: "Request not found!",
-            });
-        }
-
-        const found_token = await bcrypt.compare(req_token.hashed_token,hash);
-
-        await prismaClient.Password_Reset_Token.delete({
-            where:{
-                id: req_token.id
-            }
-        });
-
-
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        
         const salt = await bcrypt.genSalt();
-
-        const hashed_password = await bcrypt.hash(req.body.password, salt);
+        const hashed_password = await bcrypt.hash(password, salt);
 
         const updated_user = await prismaClient.user.update({
-            where:{
-                id: user.id
+            where: {
+                user_id: decoded.user_id
             },
-            data:{
-                hashed_password: hashed_password
+            data: {
+                password: hashed_password
             }
-        })
+        });
 
-        res.status(200).json({
-            message: "Password reset succesfully!"
-        })
+        return res.status(200).json({
+            message: "Password reset successfully!"
+        });
 
-
-    }catch (error) {
-            console.error("Password reset request error:", error);
-            return res.status(500).json({
-                message: "Error requesting password reset",
-                error: error.message
+    } catch (error) {
+        console.error("Password reset error:", error);
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                message: "Invalid or expired reset token"
             });
         }
-}
+        return res.status(500).json({
+            message: "Error resetting password",
+            error: error.message
+        });
+    }
+};
 
 const logoutUser = async (req, res) => {
     try {

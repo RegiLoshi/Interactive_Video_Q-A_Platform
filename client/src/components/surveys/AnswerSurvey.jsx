@@ -31,7 +31,7 @@ const AnswerSurvey = () => {
                     return;
                 }
 
-                const response = await axiosInstance.get(`/survey/${surveyId}`);
+                const response = await axiosInstance.get(`/surveys/${surveyId}`);
                 
                 if (!response.data) {
                     throw new Error('No survey data received');
@@ -132,7 +132,7 @@ const AnswerSurvey = () => {
                 formData.append('video', video, 'video.mp4');
             }
 
-            const response = await axiosInstance.post('/answer', formData, {
+            const response = await axiosInstance.post('/answers', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

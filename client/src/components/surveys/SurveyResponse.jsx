@@ -35,7 +35,7 @@ const SurveyResponse = () => {
             try {
                 setLoading(true);
                 if(!survey){
-                    setSurvey(await axiosInstance.get(`/survey/${surveyId}`));
+                    setSurvey(await axiosInstance.get(`/surveys/${surveyId}`));
                     if(!survey){
                         setError("Survey Not Found!");
                     }
@@ -43,7 +43,7 @@ const SurveyResponse = () => {
 
                 const responder = (await axiosInstance.get(`/users/${userId}`)).data;
                 setResponder(responder);
-                const videoUrl = await axiosInstance.get(`/survey/${surveyId}/responses/${responder.user_id}`);
+                const videoUrl = await axiosInstance.get(`/answers/survey/${surveyId}/responses/${responder.user_id}`);
                 setVideoUrl(videoUrl.data);
                 console.log(videoUrl.data);
                 setError(null);

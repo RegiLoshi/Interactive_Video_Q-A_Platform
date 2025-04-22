@@ -103,11 +103,12 @@ const addAnswer = async (req, res) => {
 }
 
 const getAnswers = async (req, res) => {
-    const {surveyId} = req.params;
+    console.log(req.params)
+    const {id} = req.params;
     try {
         const uniqueUsers = await prismaClient.answer.findMany({
             where: {
-                surveyId: surveyId
+                surveyId: id,
             },
             select: {
                 created_at: true,
