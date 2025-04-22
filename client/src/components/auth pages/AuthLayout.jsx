@@ -2,10 +2,10 @@ import { Outlet } from "react-router-dom";
 import { FaShieldAlt , FaUsers, FaVideo } from 'react-icons/fa';
 
 const AuthLayout = () => {
-
     return(
-    <div className="flex w-full min-h-screen">
-        <div className="bg-[#0F1828] min-h-screen w-[50%] flex flex-col justify-center px-16">
+        <div className="flex flex-col lg:flex-row w-full min-h-screen">
+            {/* Left side - Hidden on mobile, shown on lg screens */}
+            <div className="hidden lg:flex bg-[#0F1828] min-h-screen w-full lg:w-[50%] flex-col justify-center px-16">
                 <section className="flex flex-col space-y-8">
                     <h1 className="title text-4xl">SurveyHub</h1>
                     <h3 className="secondary-text text-lg">Join our community of knowledge sharers and start meaningful conversations today.</h3>
@@ -30,14 +30,18 @@ const AuthLayout = () => {
                         </li>
                     </ul>
                 </section>
+            </div>
+
+            {/* Right side - Full width on mobile, half width on lg screens */}
+            <div className='w-full lg:w-[50%] min-h-screen flex flex-col justify-between'>
+                <div className="flex-1 flex items-center justify-center">
+                    <Outlet />
+                </div>
+                <footer className="text-[#0F1828] text-center py-4">
+                    <p>&copy; {new Date().getFullYear()} SurveyHub All rights reserved.</p>
+                </footer>
+            </div>
         </div>
-        <div className='w-[50%] h-full flex flex-col justify-between'>
-            <Outlet />
-            <footer className="color-[#0F1828] text-center py-4 mt-4">
-                <p>&copy; {new Date().getFullYear()} SurveyHub All rights reserved.</p>
-            </footer>
-        </div>
-    </div>
     )
 }
 

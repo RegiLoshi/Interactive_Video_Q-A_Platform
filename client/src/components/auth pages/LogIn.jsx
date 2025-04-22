@@ -57,71 +57,83 @@ const LogIn = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full h-full flex flex-col space-y-4 justify-start items-center p-30">
-      <h1 className="!text-2xl font-semibold text-center mb-8">AnswerTube</h1>
-      
-      <div className='w-full'>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input
-          type="text"
-          id="email"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="your@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="on"
-        />
-        {errors.email && (
-          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
-            {errors.email}
-          </p>
-        )}
-      </div>
-      
-      <div className='w-full'>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-        <div className="relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            id="password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="on"
-          />
-          <button 
-            type="button"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-            onClick={togglePasswordVisibility}
-          >
-            {showPassword ? <FaEyeSlash className='cursor-pointer'/> : <FaEye className='cursor-pointer'/>}
-          </button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">AnswerTube</h1>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="text"
+                id="email"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10 sm:text-sm"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="on"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="on"
+                />
+                <button 
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? <FaEyeSlash className='cursor-pointer'/> : <FaEye className='cursor-pointer'/>}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Link className="text-sm font-medium text-blue-600 hover:text-blue-500" to="/auth/requestNewPassword">
+                Forgot password?
+              </Link>
+            </div>
+
+            <div>
+              <button 
+                type="submit"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#101827] hover:bg-[#0a0f1a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Sign in
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-center space-x-2 text-sm">
+              <FaUserPlus className="text-xl text-[#0F1828]" />
+              <span className="text-gray-600">Don't have an account?</span>
+              <Link className="font-medium text-blue-600 hover:text-blue-500" to='/auth/signup'>Sign up</Link>
+            </div>
+          </form>
         </div>
-        {errors.password && (
-          <p className="text-red-500 text-sm mt-1 p-2 rounded bg-red-100 border border-red-500">
-            {errors.password}
-          </p>
-        )}
       </div>
-      
-      <Link className='flex w-full justify-end font-bold cursor-pointer' to="/auth/requestNewPassword">
-        Forgot password?
-      </Link>
-      
-      <button 
-        type="submit"
-        className='w-full bg-[#101827] text-[#AAADB2] p-3 rounded !mb-10 hover:text-white'
-      >
-        Sign in
-      </button>
-      
-      <div className='flex items-center justify-center space-x-2'>
-        <FaUserPlus className="text-xl text-[#0F1828]" />
-        <span>Don't have an account?</span>
-        <Link className='font-bold cursor-pointer' to='/auth/signup'>Sign up</Link>
-      </div>
-    </form>
+    </div>
   );
 };
 
