@@ -102,7 +102,7 @@ const addAnswer = async (req, res) => {
     }
 }
 
-const getAnswers = async (req, res) => {
+const getAnswers = async (req, res) => { 
     console.log(req.params)
     const {id} = req.params;
     try {
