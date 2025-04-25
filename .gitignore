@@ -28,3 +28,7 @@ client/.env
 server/.env
 
 client/assets/videoDummy1.mp4
+
+server/prisma/migrations
+
+server/prisma/seed.js

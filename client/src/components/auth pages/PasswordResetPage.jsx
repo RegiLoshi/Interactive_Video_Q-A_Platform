@@ -52,17 +52,6 @@ const PasswordResetPage = () => {
         }
         
         try {
-            // const response = await fetch('http://localhost:3000/resetPassword', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({ 
-            //         id, 
-            //         token, 
-            //         password 
-            //     }),
-            // });
 
             const response = await axiosInstance.post('/auth/resetPassword',{id,token,password});
             

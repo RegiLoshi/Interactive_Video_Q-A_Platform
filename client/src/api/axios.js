@@ -36,7 +36,7 @@ axiosInstance.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                const response = await axiosInstance.post(`${baseURL}/refresh`, {}, {
+                const response = await axiosInstance.post(`${baseURL}/auth/refresh`, {}, {
                     withCredentials: true
                 });
 

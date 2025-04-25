@@ -35,18 +35,8 @@ const RequestNewPassword = () => {
     setIsSubmitting(true);
     
     try {
-      // const response = await fetch('http://localhost:3000/requestPassword', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ email }),
-      // });
-
       const response = await axiosInstance.post('/auth/requestPassword',{email});
 
-      console.log(response);
-      
       if (response.status === 200) {
         setRequestSent(true);
       } else {

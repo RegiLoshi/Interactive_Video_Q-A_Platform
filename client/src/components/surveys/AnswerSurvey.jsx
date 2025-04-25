@@ -10,8 +10,6 @@ const AnswerSurvey = () => {
     const navigate = useNavigate();
     const user = useUserStore((state) => state.user);
     const token = useUserStore((state) => state.token);
-    // const surveys = useUserStore((state) => state.surveys);
-    //const survey = surveys.find((s) => s.survey_id === surveyId);
     const [survey, setSurvey] = useState(null);
     
     const [answers, setAnswers] = useState({});
