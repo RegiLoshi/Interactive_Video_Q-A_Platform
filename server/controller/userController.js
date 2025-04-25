@@ -24,20 +24,21 @@ const getUser = async (req,res) => {
     }
 }
 
+const getUsers = async (req, res) => {
+    try{
+        const users = await prismaClient.user.findMany();
+        console.log(" SKFSF" + users);
+        return res.status(200).json(users);
+    }catch(error){
+        console.log(error);
+        res.status(404).json(error)
+    }
+}
+
 const updateProfile = async (req, res) => {
     const {id} = req.params;
     const {name, last_name, oldEmail, newEmail, oldPassword, newPassword} = req.body;
     
-    console.log('Received update request:', {
-        id,
-        name,
-        last_name,
-        oldEmail,
-        newEmail,
-        oldPassword: oldPassword ? '***' : undefined,
-        newPassword: newPassword ? '***' : undefined
-    });
-
     if(req.user.user_id != id){
         return res.status(403).json({
             message: "Forbidden!"
@@ -163,4 +164,4 @@ const updateProfile = async (req, res) => {
     }
 }
 
-export default {getUser, updateProfile};
+export default {getUser, updateProfile, getUsers};
