@@ -2,13 +2,43 @@ import prismaClient from "../config/prismaClient.js"
 import { Readable } from 'stream';
 import {google} from "googleapis"
 import sendEmail from "../emailServices/emailServices.js";
+
 const oauth2client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
 
-oauth2client.setCredentials({refresh_token: process.env.GOOGLE_REFRESH_TOKEN});
+
+let tokens = {
+  access_token: process.env.GOOGLE_ACCESS_TOKEN,
+  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+  expiry_date: process.env.GOOGLE_TOKEN_EXPIRY
+};
+
+const refreshTokens = async () => {
+  try {
+    const { tokens: newTokens } = await oauth2client.refreshAccessToken();
+    tokens = {
+      ...newTokens,
+      expiry_date: newTokens.expiry_date.toString()
+    };
+    oauth2client.setCredentials(tokens);
+    return tokens;
+  } catch (error) {
+    console.error('Error refreshing tokens:', error);
+    throw error;
+  }
+};
+
+oauth2client.setCredentials(tokens);
+
+const ensureValidTokens = async () => {
+  if (!tokens.expiry_date || Date.now() >= parseInt(tokens.expiry_date)) {
+    await refreshTokens();
+  }
+};
+
 const drive = google.drive({
   version: 'v3',
   auth: oauth2client
@@ -20,47 +50,57 @@ const addAnswer = async (req, res) => {
 
     try {
         if(video){
-            const stream = Readable.from(video.buffer);
+            try {
+                await ensureValidTokens();
+                const stream = Readable.from(video.buffer);
 
-            const response = await drive.files.create({
-                requestBody: {
-                    name: video.originalname,
-                    parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
-                    mimeType: video.mimetype,
-                },
-                media: {
-                    mimeType: video.mimetype,
-                    body: stream
-                },
-                fields: 'id, name, webViewLink, webContentLink'
-            });
+                const response = await drive.files.create({
+                    requestBody: {
+                        name: video.originalname,
+                        parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+                        mimeType: video.mimetype,
+                    },
+                    media: {
+                        mimeType: video.mimetype,
+                        body: stream
+                    },
+                    fields: 'id, name, webViewLink, webContentLink'
+                });
 
-            await drive.permissions.create({
-                fileId: response.data.id,
-                requestBody: {
-                    role: 'reader',
-                    type: 'anyone'
+                await drive.permissions.create({
+                    fileId: response.data.id,
+                    requestBody: {
+                        role: 'reader',
+                        type: 'anyone'
+                    }
+                });
+
+                const file = await drive.files.get({
+                    fileId: response.data.id,
+                    fields: 'webViewLink, webContentLink'
+                });
+
+                const videoUrl = file.data.webViewLink || file.data.webContentLink;
+
+                if (!videoUrl) {
+                    throw new Error('No video URL received from Google Drive');
                 }
-            });
 
-            const file = await drive.files.get({
-                fileId: response.data.id,
-                fields: 'webViewLink, webContentLink'
-            });
-
-            const videoUrl = file.data.webViewLink || file.data.webContentLink;
-
-            if (!videoUrl) {
-                throw new Error('No video URL received from Google Drive');
+                const createdVideoAnswer = await prismaClient.survey_Video.create({
+                    data: {
+                        question_link: videoUrl,
+                        surveyId: answers[0].surveyId,
+                        uploaderId: answers[0].authorId
+                    }
+                });
+            } catch (error) {
+                if (error.message.includes('invalid_grant')) {
+                    return res.status(401).json({
+                        message: "Google Drive authentication error. Please contact support."
+                    });
+                }
+                throw error;
             }
-
-            const createdVideoAnswer = await prismaClient.survey_Video.create({
-                data: {
-                    question_link: videoUrl,
-                    surveyId: answers[0].surveyId,
-                    uploaderId: answers[0].authorId
-                }
-            });
         }
         const createdAnswers = await prismaClient.answer.createMany({
             data: answers
@@ -83,7 +123,6 @@ const addAnswer = async (req, res) => {
             throw new Error('Survey not found');
         }
 
-
         const emailResult = await sendEmail(
             survey.author.email,
             "New Survey Answer",
@@ -95,9 +134,10 @@ const addAnswer = async (req, res) => {
         console.log(emailResult);
         return res.status(201).json({createdAnswers});
     } catch (error) {
-        console.log('Error:', error);
+        console.error('Error:', error);
         return res.status(500).json({
-            message: "Error creating answer"
+            message: "Error creating answer",
+            error: error.message
         });
     }
 }

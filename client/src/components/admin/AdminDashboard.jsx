@@ -108,7 +108,12 @@ const AdminDashboard = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axiosInstance.delete('/surveys', { data: { surveyId } });
+                    await axiosInstance.delete('/surveys', { 
+                        data: { 
+                            surveyId,
+                            userId: user.user_id 
+                        } 
+                    });
                     
                     const response = await axiosInstance.get('/surveys');
                     setSurvey(response.data || []);

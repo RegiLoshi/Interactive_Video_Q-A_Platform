@@ -187,4 +187,46 @@ const deleteUser = async (req,res) => {
     }
 }
 
-export default {getUser, updateProfile, getUsers, deleteUser};
+const createUser = async (req, res) => {
+    const {name, lastName, email, password, role} = req.body;
+    try{
+        const result = await prismaClient.$transaction(async (prisma) => {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    email: email
+                }
+            });
+
+            if (existingUser) {
+                throw new Error("Email already in use!");
+            }
+
+            const salt = await bcrypt.genSalt();
+            const hashed_password = await bcrypt.hash(password, salt);
+
+            const created_user = await prisma.user.create({
+                data: {
+                    name,
+                    last_name: lastName,
+                    email,
+                    password: hashed_password,
+                    role: role
+                }
+            });
+
+            return created_user;
+        });
+
+        return res.status(201).json({
+            message: "User created successfully",
+            user: result
+        });
+    } catch(error) {
+        console.error("Create user error:", error);
+        return res.status(400).json({
+            message: error.message || "Error creating user"
+        });
+    }
+}
+
+export default {getUser, updateProfile, getUsers, deleteUser, createUser};

@@ -20,7 +20,6 @@ const CreateUser = () => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Admin check
     if (user?.role !== 'ADMIN') {
         return (
             <div className="p-6 max-w-7xl mx-auto">
@@ -39,7 +38,6 @@ const CreateUser = () => {
             [name]: value
         }));
 
-        // Clear error when field is edited
         if (errors[name]) {
             setErrors(prev => ({
                 ...prev,
@@ -84,7 +82,7 @@ const CreateUser = () => {
         setIsSubmitting(true);
         
         try {
-            await axiosInstance.post('/admin/users', formData);
+            await axiosInstance.post('/users', formData);
             
             Swal.fire({
                 title: 'Success!',
