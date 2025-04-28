@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HiUsers, HiDocumentText, HiPlus, HiTrash, HiPencil, HiUserAdd } from 'react-icons/hi';
+import { HiUsers, HiDocumentText, HiPlus, HiTrash, HiPencil, HiUserAdd, HiSearch } from 'react-icons/hi';
 import useUserStore from '../../stores/userStore';
 import axiosInstance from '../../api/axios';
 import Swal from 'sweetalert2';
@@ -14,6 +14,8 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
     const [isLoadingSurveys, setIsLoadingSurveys] = useState(true);
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [surveySearchTerm, setSurveySearchTerm] = useState('');
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalSurveys: 0,
@@ -29,15 +31,12 @@ const AdminDashboard = () => {
                 setIsLoadingUsers(true);
                 setIsLoadingSurveys(true);
                 
-                // Fetch all users
                 const usersResponse = await axiosInstance.get('/users');
                 setUsers(usersResponse.data || []);
                 
-                // Calculate user statistics
                 const responders = usersResponse.data.filter(u => u.role === 'RESPONDER').length;
                 const askers = usersResponse.data.filter(u => u.role === 'ASKER').length;
                 
-                // Fetch all surveys
                 const surveysResponse = await axiosInstance.get('/surveys');
                 setSurvey(surveysResponse.data || []);
                 
@@ -75,10 +74,9 @@ const AdminDashboard = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axiosInstance.delete(`/admin/users/${userId}`);
+                    await axiosInstance.delete(`/users/${userId}`);
                     
-                    // Refresh user list
-                    const response = await axiosInstance.get('/auth/users');
+                    const response = await axiosInstance.get('/users');
                     setUsers(response.data || []);
                     
                     Swal.fire(
@@ -112,7 +110,6 @@ const AdminDashboard = () => {
                 try {
                     await axiosInstance.delete('/surveys', { data: { surveyId } });
                     
-                    // Refresh survey list
                     const response = await axiosInstance.get('/surveys');
                     setSurvey(response.data || []);
                     
@@ -135,10 +132,9 @@ const AdminDashboard = () => {
 
     const handleChangeUserRole = async (userId, newRole) => {
         try {
-            await axiosInstance.patch(`/admin/users/${userId}/role`, { role: newRole });
+            await axiosInstance.patch(`/users/${userId}/role`, { role: newRole });
             
-            // Refresh user list
-            const response = await axiosInstance.get('/auth/users');
+            const response = await axiosInstance.get('/users');
             setUsers(response.data || []);
             
             Swal.fire({
@@ -156,7 +152,25 @@ const AdminDashboard = () => {
         }
     };
 
-    // Admin dashboard page
+    const filteredUsers = users.filter(user => {
+        const searchTerm = userSearchTerm.toLowerCase();
+        return (
+            user.name.toLowerCase().includes(searchTerm) ||
+            user.last_name.toLowerCase().includes(searchTerm) ||
+            user.email.toLowerCase().includes(searchTerm) ||
+            user.role.toLowerCase().includes(searchTerm)
+        );
+    });
+
+    const filteredSurveys = surveys?.filter(survey => {
+        const searchTerm = surveySearchTerm.toLowerCase();
+        const authorName = users.find(u => u.user_id === survey.authorId)?.name || '';
+        return (
+            survey.title.toLowerCase().includes(searchTerm) ||
+            authorName.toLowerCase().includes(searchTerm)
+        );
+    });
+
     if (user?.role !== 'ADMIN') {
         return (
             <div className="p-6 max-w-7xl mx-auto">
@@ -184,7 +198,6 @@ const AdminDashboard = () => {
                 </Link>
             </div>
 
-            {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <p className="text-gray-600 text-sm mb-2">Total Users</p>
@@ -204,13 +217,24 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* User Management Section */}
             <div className="bg-white rounded-lg shadow-sm mb-8">
                 <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                        <HiUsers className="mr-2 text-blue-600" />
-                        User Management
-                    </h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold flex items-center">
+                            <HiUsers className="mr-2 text-blue-600" />
+                            User Management
+                        </h2>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={userSearchTerm}
+                                onChange={(e) => setUserSearchTerm(e.target.value)}
+                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <HiSearch className="absolute left-3 top-2.5 text-gray-400" />
+                        </div>
+                    </div>
                     
                     {isLoadingUsers ? (
                         <div className="flex justify-center items-center h-64">
@@ -228,7 +252,7 @@ const AdminDashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {users.map((user) => (
+                                    {filteredUsers.map((user) => (
                                         <tr key={user.user_id}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{user.name} {user.last_name}</div>
@@ -259,7 +283,7 @@ const AdminDashboard = () => {
                                                     <button 
                                                         onClick={() => handleDeleteUser(user.user_id)}
                                                         className="text-red-600 hover:text-red-900"
-                                                        disabled={user.user_id === user.user_id}
+                                                        disabled={user.user_id === useUserStore.getState().user?.user_id}
                                                     >
                                                         <HiTrash className="h-5 w-5" />
                                                     </button>
@@ -270,9 +294,9 @@ const AdminDashboard = () => {
                                 </tbody>
                             </table>
                             
-                            {users.length === 0 && (
+                            {filteredUsers.length === 0 && (
                                 <div className="text-center py-8 text-gray-500">
-                                    No users found
+                                    {userSearchTerm ? 'No users found matching your search' : 'No users found'}
                                 </div>
                             )}
                         </div>
@@ -280,13 +304,24 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Survey Management Section */}
             <div className="bg-white rounded-lg shadow-sm">
                 <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                        <HiDocumentText className="mr-2 text-blue-600" />
-                        Survey Management
-                    </h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold flex items-center">
+                            <HiDocumentText className="mr-2 text-blue-600" />
+                            Survey Management
+                        </h2>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search surveys..."
+                                value={surveySearchTerm}
+                                onChange={(e) => setSurveySearchTerm(e.target.value)}
+                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <HiSearch className="absolute left-3 top-2.5 text-gray-400" />
+                        </div>
+                    </div>
                     
                     {isLoadingSurveys ? (
                         <div className="flex justify-center items-center h-64">
@@ -294,7 +329,7 @@ const AdminDashboard = () => {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {surveys?.map((survey) => (
+                            {filteredSurveys?.map((survey) => (
                                 <div key={survey.survey_id} className="border-b pb-4 last:border-b-0 last:pb-0">
                                     <div className="flex justify-between items-center">
                                         <div>
@@ -326,9 +361,9 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             ))}
-                            {(!surveys || surveys.length === 0) && (
+                            {(!filteredSurveys || filteredSurveys.length === 0) && (
                                 <div className="text-center py-8 text-gray-500">
-                                    No surveys found
+                                    {surveySearchTerm ? 'No surveys found matching your search' : 'No surveys found'}
                                 </div>
                             )}
                         </div>

@@ -11,10 +11,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    // The redirect will happen automatically due to the ProtectedRoute component
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

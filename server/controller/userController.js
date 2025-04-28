@@ -164,4 +164,27 @@ const updateProfile = async (req, res) => {
     }
 }
 
-export default {getUser, updateProfile, getUsers};
+const deleteUser = async (req,res) => {
+    const {id} = req.params;
+    const personToBeDeleted = await prismaClient.user.findUnique({
+        where:{
+            user_id: id
+        }
+    })
+    if(!personToBeDeleted){
+        return res.status(404).json({message: "User not found"})
+    }
+    try{
+        await prismaClient.user.delete({
+            where:{
+                user_id: id
+            }
+        })
+        return res.status(200).json({message: "User deleted successfully"})
+    }catch(error){
+        console.log(error)
+        return res.status(500).json({message: "Error deleting user"})
+    }
+}
+
+export default {getUser, updateProfile, getUsers, deleteUser};
