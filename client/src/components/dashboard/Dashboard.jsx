@@ -1,17 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HiEye, HiTrash, HiPlus, HiPencil } from 'react-icons/hi';
 import useUserStore from '../../stores/userStore';
 import axiosInstance from '../../api/axios';
-import { useState } from 'react';
 import Swal from 'sweetalert2';
+
 const Dashboard = () => {
     const surveys = useUserStore((state) => state.surveys);
     const setSurvey = useUserStore((state) => state.setSurvey)
     const user = useUserStore((state) => state.user);
     const token = useUserStore((state) => state.token);
-    const [rerender, setRerender] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [surveyPage, setSurveyPage] = useState(1);
+    const [surveyOffset, setSurveyOffset] = useState(0);
+    const [surveyLimit, setSurveyLimit] = useState(5);
+    const [totalSurveys, setTotalSurveys] = useState(0);
 
     useEffect(() => {
         const fetchSurveys = async () => {
@@ -19,13 +22,13 @@ const Dashboard = () => {
             
             try {
                 setIsLoading(true);
-                const { data } = await axiosInstance.get('/surveys');
+                const endpoint = user?.role === 'ASKER' 
+                    ? `/surveys/pagination/${surveyLimit}/${surveyOffset}/${user.user_id}`
+                    : `/surveys/pagination/${surveyLimit}/${surveyOffset}`;
                 
-                const filteredSurveys = user?.role === 'ASKER' 
-                    ? data.filter(survey => survey.authorId === user.user_id) 
-                    : data;
-
-                setSurvey(filteredSurveys || []);
+                const { data } = await axiosInstance.get(endpoint);
+                setSurvey(data.surveys || []);
+                setTotalSurveys(data.total || 0);
             } catch (error) {
                 console.error('Error fetching surveys:', error);
                 Swal.fire({
@@ -39,7 +42,18 @@ const Dashboard = () => {
         };
 
         fetchSurveys();
-    }, [user, token, setSurvey]);
+    }, [user, token, setSurvey, surveyLimit, surveyOffset]);
+
+    const handlePageChange = (newPage) => {
+        setSurveyPage(newPage);
+        setSurveyOffset((newPage - 1) * surveyLimit);
+    };
+
+    const handleLimitChange = (newLimit) => {
+        setSurveyLimit(newLimit);
+        setSurveyPage(1);
+        setSurveyOffset(0);
+    };
 
     const handleDelete = async (surveyId) => {
         Swal.fire({
@@ -51,13 +65,15 @@ const Dashboard = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axiosInstance.delete('/surveys',{data: {surveyId, userId: user.user_id}});
-                    const { data } = await axiosInstance.get('/surveys');
-                    const filteredSurveys = user?.role === 'ASKER' 
-            ? data.filter(survey => survey.authorId === user.user_id) 
-            : data;
-                setSurvey(filteredSurveys);
-                setRerender(!rerender);
+                    await axiosInstance.delete('/surveys', { data: { surveyId, userId: user.user_id } });
+                    
+                    const endpoint = user?.role === 'ASKER' 
+                        ? `/surveys/pagination/${surveyLimit}/${surveyOffset}/${user.user_id}`
+                        : `/surveys/pagination/${surveyLimit}/${surveyOffset}`;
+                    
+                    const { data } = await axiosInstance.get(endpoint);
+                    setSurvey(data.surveys || []);
+                    setTotalSurveys(data.total || 0);
                 } catch (error) {
                     console.error('Error deleting survey:', error);
                     Swal.fire({
@@ -91,7 +107,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <p className="text-gray-600 text-sm mb-2">Total Surveys</p>
-                    <p className="text-2xl font-semibold">{surveys?.length || 0}</p>
+                    <p className="text-2xl font-semibold">{totalSurveys}</p>
                 </div>
             </div>
 
@@ -147,11 +163,43 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             ))}
-                            {(!surveys || surveys.length === 0) && (
-                                <div className="text-center py-8 text-gray-500">
-                                    No surveys found
+                            
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600">Show:</span>
+                                    <select 
+                                        value={surveyLimit}
+                                        onChange={(e) => handleLimitChange(Number(e.target.value))}
+                                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                    </select>
+                                    <span className="text-sm text-gray-600">per page</span>
                                 </div>
-                            )}
+                                
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(surveyPage - 1)}
+                                        disabled={surveyPage === 1}
+                                        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-sm text-gray-600">
+                                        Page {surveyPage} of {Math.ceil(totalSurveys / surveyLimit)}
+                                    </span>
+                                    <button
+                                        onClick={() => handlePageChange(surveyPage + 1)}
+                                        disabled={surveyPage >= Math.ceil(totalSurveys / surveyLimit)}
+                                        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

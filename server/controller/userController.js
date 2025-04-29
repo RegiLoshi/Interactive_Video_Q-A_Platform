@@ -24,20 +24,55 @@ const getUser = async (req,res) => {
     }
 }
 
+const getUsers = async (req, res) => {
+    try{
+        const users = await prismaClient.user.findMany();
+        console.log(" SKFSF" + users);
+        return res.status(200).json(users);
+    }catch(error){
+        console.log(error);
+        res.status(404).json(error)
+    }
+}
+
+const getUsersPagination = async (req, res) => {
+    const {limit, offset} = req.params;
+    try {
+        const [users, total] = await Promise.all([
+            prismaClient.user.findMany({
+                skip: parseInt(offset),
+                take: parseInt(limit),
+                select: {
+                    user_id: true,
+                    name: true,
+                    last_name: true,
+                    email: true,
+                    role: true,
+                    created_at: true
+                },
+                orderBy: {
+                    created_at: 'desc'
+                }
+            }),
+            prismaClient.user.count()
+        ]);
+
+        return res.status(200).json({
+            users,
+            total
+        });
+    } catch (error) {
+        console.error('Error fetching paginated users:', error);
+        return res.status(500).json({
+            message: "Error fetching paginated users"
+        });
+    }
+}
+
 const updateProfile = async (req, res) => {
     const {id} = req.params;
     const {name, last_name, oldEmail, newEmail, oldPassword, newPassword} = req.body;
     
-    console.log('Received update request:', {
-        id,
-        name,
-        last_name,
-        oldEmail,
-        newEmail,
-        oldPassword: oldPassword ? '***' : undefined,
-        newPassword: newPassword ? '***' : undefined
-    });
-
     if(req.user.user_id != id){
         return res.status(403).json({
             message: "Forbidden!"
@@ -163,4 +198,116 @@ const updateProfile = async (req, res) => {
     }
 }
 
-export default {getUser, updateProfile};
+const deleteUser = async (req,res) => {
+    const {id} = req.params;
+    const personToBeDeleted = await prismaClient.user.findUnique({
+        where:{
+            user_id: id
+        }
+    })
+    if(!personToBeDeleted){
+        return res.status(404).json({message: "User not found"})
+    }
+    try{
+        await prismaClient.user.delete({
+            where:{
+                user_id: id
+            }
+        })
+        return res.status(200).json({message: "User deleted successfully"})
+    }catch(error){
+        console.log(error)
+        return res.status(500).json({message: "Error deleting user"})
+    }
+}
+
+const createUser = async (req, res) => {
+    const {name, lastName, email, password, role} = req.body;
+    try{
+        const result = await prismaClient.$transaction(async (prisma) => {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    email: email
+                }
+            });
+
+            if (existingUser) {
+                throw new Error("Email already in use!");
+            }
+
+            const salt = await bcrypt.genSalt();
+            const hashed_password = await bcrypt.hash(password, salt);
+
+            const created_user = await prisma.user.create({
+                data: {
+                    name,
+                    last_name: lastName,
+                    email,
+                    password: hashed_password,
+                    role: role
+                }
+            });
+
+            return created_user;
+        });
+
+        return res.status(201).json({
+            message: "User created successfully",
+            user: result
+        });
+    } catch(error) {
+        console.error("Create user error:", error);
+        return res.status(400).json({
+            message: error.message || "Error creating user"
+        });
+    }
+}
+
+const updateUserRole = async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    try {
+        const existingUser = await prismaClient.user.findUnique({
+            where: {
+                user_id: id
+            }
+        });
+
+        if (!existingUser) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        const updatedUser = await prismaClient.user.update({
+            where: {
+                user_id: id
+            },
+            data: {
+                role: role
+            },
+            select: {
+                user_id: true,
+                name: true,
+                last_name: true,
+                email: true,
+                role: true
+            }
+        });
+
+        return res.status(200).json({
+            message: "User role updated successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error("Update user role error:", error);
+        return res.status(500).json({
+            message: "Error updating user role",
+            error: error.message
+        });
+    }
+};
+
+export default {getUser, updateProfile, getUsers, deleteUser, createUser, getUsersPagination, updateUserRole};

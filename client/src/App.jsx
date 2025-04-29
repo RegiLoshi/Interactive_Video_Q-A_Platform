@@ -10,20 +10,30 @@ import DashboardLayout from './components/dashboard/DashboardLayout'
 import Dashboard from './components/dashboard/Dashboard'
 import SettingsPage from './components/userPages/SettingsPage';
 import ProtectedRoute from './components/auth pages/ProtectedRoute';
+import AdminRoute from './components/auth pages/AdminRoute';
 import useUserStore from './stores/userStore';
 import AuthCheck from './components/auth pages/AuthCheck';
 import SurveyRespondents from './components/surveys/SurveyRespondents';
 import CreateSurveyPage from './components/userPages/CreateSurveyPage';
 import SurveyResponse from './components/surveys/SurveyResponse'
 import AnswerSurvey from './components/surveys/AnswerSurvey';
+import AdminDashboard from './components/admin/AdminDashboard';
+import CreateUser from './components/admin/CreateUser';
+
 function App() {
   const token = useUserStore((state) => state.token);
+  const user = useUserStore((state) => state.user);
 
   return (
     <>
       <AuthCheck />
       <Routes>
-        <Route path="/" element={token ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth/login" replace />} />
+        <Route path="/" element={token ? 
+          (user?.role === 'ADMIN' ? 
+            <Navigate to="/admin/dashboard" replace /> : 
+            <Navigate to="/dashboard" replace />) : 
+          <Navigate to="/auth/login" replace />
+        } />
         
         <Route path="/auth" element={<AuthLayout />}>
           <Route path="login" element={<LogIn />} />
@@ -39,6 +49,13 @@ function App() {
             <Route path="surveys/:surveyId" element={<SurveyRespondents />} />
             <Route path="surveys/:surveyId/:userId" element={<SurveyResponse />} />
             <Route path="surveys/:surveyId/answer" element={<AnswerSurvey />} />
+          </Route>
+        </Route>
+        
+        <Route path="/admin" element={<AdminRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="create-user" element={<CreateUser />} />
           </Route>
         </Route>
         
