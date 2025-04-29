@@ -35,6 +35,40 @@ const getUsers = async (req, res) => {
     }
 }
 
+const getUsersPagination = async (req, res) => {
+    const {limit, offset} = req.params;
+    try {
+        const [users, total] = await Promise.all([
+            prismaClient.user.findMany({
+                skip: parseInt(offset),
+                take: parseInt(limit),
+                select: {
+                    user_id: true,
+                    name: true,
+                    last_name: true,
+                    email: true,
+                    role: true,
+                    created_at: true
+                },
+                orderBy: {
+                    created_at: 'desc'
+                }
+            }),
+            prismaClient.user.count()
+        ]);
+
+        return res.status(200).json({
+            users,
+            total
+        });
+    } catch (error) {
+        console.error('Error fetching paginated users:', error);
+        return res.status(500).json({
+            message: "Error fetching paginated users"
+        });
+    }
+}
+
 const updateProfile = async (req, res) => {
     const {id} = req.params;
     const {name, last_name, oldEmail, newEmail, oldPassword, newPassword} = req.body;
@@ -229,4 +263,51 @@ const createUser = async (req, res) => {
     }
 }
 
-export default {getUser, updateProfile, getUsers, deleteUser, createUser};
+const updateUserRole = async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    try {
+        const existingUser = await prismaClient.user.findUnique({
+            where: {
+                user_id: id
+            }
+        });
+
+        if (!existingUser) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        const updatedUser = await prismaClient.user.update({
+            where: {
+                user_id: id
+            },
+            data: {
+                role: role
+            },
+            select: {
+                user_id: true,
+                name: true,
+                last_name: true,
+                email: true,
+                role: true
+            }
+        });
+
+        return res.status(200).json({
+            message: "User role updated successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error("Update user role error:", error);
+        return res.status(500).json({
+            message: "Error updating user role",
+            error: error.message
+        });
+    }
+};
+
+export default {getUser, updateProfile, getUsers, deleteUser, createUser, getUsersPagination, updateUserRole};

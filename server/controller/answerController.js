@@ -3,41 +3,14 @@ import { Readable } from 'stream';
 import {google} from "googleapis"
 import sendEmail from "../emailServices/emailServices.js";
 
+
 const oauth2client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
 
-
-let tokens = {
-  access_token: process.env.GOOGLE_ACCESS_TOKEN,
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-  expiry_date: process.env.GOOGLE_TOKEN_EXPIRY
-};
-
-const refreshTokens = async () => {
-  try {
-    const { tokens: newTokens } = await oauth2client.refreshAccessToken();
-    tokens = {
-      ...newTokens,
-      expiry_date: newTokens.expiry_date.toString()
-    };
-    oauth2client.setCredentials(tokens);
-    return tokens;
-  } catch (error) {
-    console.error('Error refreshing tokens:', error);
-    throw error;
-  }
-};
-
-oauth2client.setCredentials(tokens);
-
-const ensureValidTokens = async () => {
-  if (!tokens.expiry_date || Date.now() >= parseInt(tokens.expiry_date)) {
-    await refreshTokens();
-  }
-};
+oauth2client.setCredentials({refresh_token: process.env.GOOGLE_REFRESH_TOKEN});
 
 const drive = google.drive({
   version: 'v3',
@@ -51,7 +24,6 @@ const addAnswer = async (req, res) => {
     try {
         if(video){
             try {
-                await ensureValidTokens();
                 const stream = Readable.from(video.buffer);
 
                 const response = await drive.files.create({

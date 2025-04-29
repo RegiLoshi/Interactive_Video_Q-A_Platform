@@ -147,6 +147,99 @@ const getSurveysID = async (req,res) => {
     }
 }   
 
+const getSurveyPagination = async (req, res) => {
+    const {limit, offset} = req.params;
+    try {
+        const [surveys, total] = await Promise.all([
+            prismaClient.survey.findMany({
+                skip: parseInt(offset),
+                take: parseInt(limit),
+                include: {
+                    questions: {
+                        select: {
+                            question_id: true,
+                            answers: true,
+                            title: true,
+                            category: true,
+                        }
+                    },
+                    author: {
+                        select: {
+                            name: true,
+                            last_name: true,
+                            user_id: true
+                        }
+                    }
+                },
+                orderBy: {
+                    created_at: 'desc'
+                }
+            }),
+            prismaClient.survey.count()
+        ]);
+
+        return res.status(200).json({
+            surveys,
+            total
+        });
+    } catch (error) {
+        console.error('Error fetching paginated surveys:', error);
+        return res.status(500).json({
+            message: "Error fetching paginated surveys"
+        });
+    }
+}
+
+const getSurveyPaginationUser = async(req, res) => {
+    const {limit, offset, userId} = req.params;
+    try {
+        const [surveys, total] = await Promise.all([
+            prismaClient.survey.findMany({
+                where: {
+                    authorId: userId
+                },
+                skip: parseInt(offset),
+                take: parseInt(limit),
+                include: {
+                    questions: {
+                        select: {
+                            question_id: true,
+                            answers: true,
+                            title: true,
+                            category: true,
+                        }
+                    },
+                    author: {
+                        select: {
+                            name: true,
+                            last_name: true,
+                            user_id: true
+                        }
+                    }
+                },
+                orderBy: {
+                    created_at: 'desc'
+                }
+            }),
+            prismaClient.survey.count({
+                where: {
+                    authorId: userId
+                }
+            })
+        ]);
+
+        return res.status(200).json({
+            surveys,
+            total
+        });
+    } catch (error) {
+        console.error('Error fetching user paginated surveys:', error);
+        return res.status(500).json({
+            message: "Error fetching user paginated surveys"
+        });
+    }
+}
 
 
-export default {getSurveys, addSurvey, deleteSurvey,getSurveysID};
+
+export default {getSurveys, addSurvey, deleteSurvey,getSurveysID, getSurveyPagination, getSurveyPaginationUser};

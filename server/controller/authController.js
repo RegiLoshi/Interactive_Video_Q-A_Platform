@@ -2,7 +2,6 @@ import prismaClient from "../config/prismaClient.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import sendEmail from '../emailServices/emailServices.js'
-import crypto from 'crypto'
 const getUsers = async (req, res) => {
     console.log(req.user)
     try {

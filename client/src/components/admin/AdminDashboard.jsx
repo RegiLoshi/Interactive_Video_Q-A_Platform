@@ -16,6 +16,14 @@ const AdminDashboard = () => {
     const [isLoadingSurveys, setIsLoadingSurveys] = useState(true);
     const [userSearchTerm, setUserSearchTerm] = useState('');
     const [surveySearchTerm, setSurveySearchTerm] = useState('');
+    const [surveyPage, setSurveyPage] = useState(1);
+    const [surveyOffset, setSurveyOffset] = useState(0);
+    const [surveyLimit, setSurveyLimit] = useState(5);
+    const [totalSurveys, setTotalSurveys] = useState(0);
+    const [userPage, setUserPage] = useState(1);
+    const [userOffset, setUserOffset] = useState(0);
+    const [userLimit, setUserLimit] = useState(5);
+    const [totalUsers, setTotalUsers] = useState(0);
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalSurveys: 0,
@@ -31,18 +39,20 @@ const AdminDashboard = () => {
                 setIsLoadingUsers(true);
                 setIsLoadingSurveys(true);
                 
-                const usersResponse = await axiosInstance.get('/users');
-                setUsers(usersResponse.data || []);
+                const usersResponse = await axiosInstance.get(`/users/pagination/${userLimit}/${userOffset}`);
+                setUsers(usersResponse.data.users || []);
+                setTotalUsers(usersResponse.data.total || 0);
                 
-                const responders = usersResponse.data.filter(u => u.role === 'RESPONDER').length;
-                const askers = usersResponse.data.filter(u => u.role === 'ASKER').length;
+                const responders = usersResponse.data.users.filter(u => u.role === 'RESPONDER').length;
+                const askers = usersResponse.data.users.filter(u => u.role === 'ASKER').length;
                 
-                const surveysResponse = await axiosInstance.get('/surveys');
-                setSurvey(surveysResponse.data || []);
+                const surveysResponse = await axiosInstance.get(`/surveys/pagination/${surveyLimit}/${surveyOffset}`);
+                setSurvey(surveysResponse.data.surveys || []);
+                setTotalSurveys(surveysResponse.data.total || 0);
                 
                 setStats({
-                    totalUsers: usersResponse.data.length,
-                    totalSurveys: surveysResponse.data.length,
+                    totalUsers: usersResponse.data.total || 0,
+                    totalSurveys: surveysResponse.data.total || 0,
                     totalResponders: responders,
                     totalAskers: askers
                 });
@@ -60,7 +70,18 @@ const AdminDashboard = () => {
         };
 
         fetchData();
-    }, [token, user, setSurvey]);
+    }, [token, user, setSurvey, surveyLimit, surveyOffset, userLimit, userOffset]);
+
+    const handleUserPageChange = (newPage) => {
+        setUserPage(newPage);
+        setUserOffset((newPage - 1) * userLimit);
+    };
+
+    const handleUserLimitChange = (newLimit) => {
+        setUserLimit(newLimit);
+        setUserPage(1);
+        setUserOffset(0);
+    };
 
     const handleDeleteUser = async (userId) => {
         Swal.fire({
@@ -76,8 +97,9 @@ const AdminDashboard = () => {
                 try {
                     await axiosInstance.delete(`/users/${userId}`);
                     
-                    const response = await axiosInstance.get('/users');
-                    setUsers(response.data || []);
+                    const usersResponse = await axiosInstance.get(`/users/pagination/${userLimit}/${userOffset}`);
+                    setUsers(usersResponse.data.users || []);
+                    setTotalUsers(usersResponse.data.total || 0);
                     
                     Swal.fire(
                         'Deleted!',
@@ -115,8 +137,9 @@ const AdminDashboard = () => {
                         } 
                     });
                     
-                    const response = await axiosInstance.get('/surveys');
-                    setSurvey(response.data || []);
+                    const surveysResponse = await axiosInstance.get(`/surveys/pagination/${surveyLimit}/${surveyOffset}`);
+                    setSurvey(surveysResponse.data.surveys || []);
+                    setTotalSurveys(surveysResponse.data.total || 0);
                     
                     Swal.fire(
                         'Deleted!',
@@ -155,6 +178,17 @@ const AdminDashboard = () => {
                 icon: 'error',
             });
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setSurveyPage(newPage);
+        setSurveyOffset((newPage - 1) * surveyLimit);
+    };
+
+    const handleLimitChange = (newLimit) => {
+        setSurveyLimit(newLimit);
+        setSurveyPage(1);
+        setSurveyOffset(0);
     };
 
     const filteredUsers = users.filter(user => {
@@ -304,6 +338,43 @@ const AdminDashboard = () => {
                                     {userSearchTerm ? 'No users found matching your search' : 'No users found'}
                                 </div>
                             )}
+
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600">Show:</span>
+                                    <select 
+                                        value={userLimit}
+                                        onChange={(e) => handleUserLimitChange(Number(e.target.value))}
+                                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                    </select>
+                                    <span className="text-sm text-gray-600">per page</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleUserPageChange(userPage - 1)}
+                                        disabled={userPage === 1}
+                                        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-sm text-gray-600">
+                                        Page {userPage} of {Math.ceil(totalUsers / userLimit)}
+                                    </span>
+                                    <button
+                                        onClick={() => handleUserPageChange(userPage + 1)}
+                                        disabled={userPage >= Math.ceil(totalUsers / userLimit)}
+                                        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -366,11 +437,43 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             ))}
-                            {(!filteredSurveys || filteredSurveys.length === 0) && (
-                                <div className="text-center py-8 text-gray-500">
-                                    {surveySearchTerm ? 'No surveys found matching your search' : 'No surveys found'}
+                            
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600">Show:</span>
+                                    <select 
+                                        value={surveyLimit}
+                                        onChange={(e) => handleLimitChange(Number(e.target.value))}
+                                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                    </select>
+                                    <span className="text-sm text-gray-600">per page</span>
                                 </div>
-                            )}
+                                
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(surveyPage - 1)}
+                                        disabled={surveyPage === 1}
+                                        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-sm text-gray-600">
+                                        Page {surveyPage} of {Math.ceil(totalSurveys / surveyLimit)}
+                                    </span>
+                                    <button
+                                        onClick={() => handlePageChange(surveyPage + 1)}
+                                        disabled={surveyPage >= Math.ceil(totalSurveys / surveyLimit)}
+                                        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
