@@ -1,22 +1,7 @@
 import prismaClient from "../config/prismaClient.js"
 import { Readable } from 'stream';
-import {google} from "googleapis"
 import sendEmail from "../emailServices/emailServices.js";
-
-
-const oauth2client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
-
-oauth2client.setCredentials({refresh_token: process.env.GOOGLE_REFRESH_TOKEN});
-
-const drive = google.drive({
-  version: 'v3',
-  auth: oauth2client
-});
-
+import drive from "../config/googleDrive.js";
 const addAnswer = async (req, res) => {
     const answers = JSON.parse(req.body.answers);
     const video = req.file;
