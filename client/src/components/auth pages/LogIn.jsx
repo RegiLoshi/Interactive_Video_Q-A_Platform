@@ -61,7 +61,7 @@ const LogIn = () => {
       <div className="w-full max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">AnswerTube</h1>
+            <h1 className="text-3xl font-bold text-gray-900">SurveyHub</h1>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">

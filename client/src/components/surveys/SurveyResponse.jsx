@@ -45,7 +45,6 @@ const SurveyResponse = () => {
                 setResponder(responder);
                 const videoUrl = await axiosInstance.get(`/answers/survey/${surveyId}/responses/${responder.user_id}`);
                 setVideoUrl(videoUrl.data);
-                console.log(videoUrl.data);
                 setError(null);
             } catch (err) {
                 setError('Failed to load survey data');

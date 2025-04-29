@@ -127,7 +127,7 @@ const AnswerSurvey = () => {
             formData.append('answers', JSON.stringify(formattedAnswers));
 
             if (video) {
-                formData.append('video', video, 'video.mp4');
+                formData.append('video', video, `survey_progress_${surveyId}_${user.user_id}`);
             }
 
             const response = await axiosInstance.post('/answers', formData, {

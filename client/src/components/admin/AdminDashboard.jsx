@@ -254,6 +254,7 @@ const AdminDashboard = () => {
                     <p className="text-gray-600 text-sm mb-2">Askers</p>
                     <p className="text-2xl font-semibold">{stats.totalAskers}</p>
                 </div>
+                
             </div>
 
             <div className="bg-white rounded-lg shadow-sm mb-8">
@@ -271,7 +272,7 @@ const AdminDashboard = () => {
                                 onChange={(e) => setUserSearchTerm(e.target.value)}
                                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
-                            <HiSearch className="absolute left-3 top-2.5 text-gray-400" />
+                            <HiSearch className="absolute left-2 top-3.5 text-gray-400" />
                         </div>
                     </div>
                     
@@ -310,9 +311,10 @@ const AdminDashboard = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <select 
-                                                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                                                        className="text-sm border border-gray-300 rounded px-2 py-1 disabled:hidden"
                                                         value={user.role}
                                                         onChange={(e) => handleChangeUserRole(user.user_id, e.target.value)}
+                                                        disabled={user.email === 'admin@admin.com' || user.user_id === useUserStore.getState().user?.user_id }
                                                     >
                                                         <option value="ADMIN">Admin</option>
                                                         <option value="ASKER">Asker</option>
@@ -321,8 +323,8 @@ const AdminDashboard = () => {
                                                     
                                                     <button 
                                                         onClick={() => handleDeleteUser(user.user_id)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                        disabled={user.user_id === useUserStore.getState().user?.user_id}
+                                                        className="text-red-600 hover:text-red-900 disabled:hidden"
+                                                        disabled={user.email === 'admin@admin.com' || user.user_id === useUserStore.getState().user?.user_id}
                                                     >
                                                         <HiTrash className="h-5 w-5" />
                                                     </button>
