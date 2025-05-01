@@ -88,7 +88,6 @@ const addAnswer = async (req, res) => {
             survey.author.name,
             survey.title,
         );
-        console.log(emailResult);
         return res.status(201).json({createdAnswers});
     } catch (error) {
         console.error('Error:', error);

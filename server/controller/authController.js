@@ -2,29 +2,6 @@ import prismaClient from "../config/prismaClient.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import sendEmail from '../emailServices/emailServices.js'
-const getUsers = async (req, res) => {
-    console.log(req.user)
-    try {
-        const users = await prismaClient.user.findMany({
-            include: {
-                liked_categories: true,
-                authored_questions: true,
-                authored_answers: true,
-                bookmarked_questions: true,
-                bookmarked_answers: true,
-                liked_questions: true,
-                liked_answers: true,
-                subscribed_questions: true,
-            }
-        }); 
-        return res.status(200).json(users); 
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            message: "Internal Server Error while fetching users"
-        });
-    }
-};
 /*
 REQUEST EXAMPLE:
 
@@ -39,7 +16,6 @@ REQUEST EXAMPLE:
 */
 
 const signUp = async (req, res) => {
-    console.log(req.body);
     const { name, lastName, email, password } = req.body;
 
     try {
@@ -173,7 +149,6 @@ const logIn = async (req, res) => {
             });
         }
     } catch(error) {
-        console.error("Login error:", error);
         return res.status(500).json({
             message: "Internal Server Error!"
         });
@@ -181,9 +156,7 @@ const logIn = async (req, res) => {
 }
 
 const refreshToken = async (req, res) => {
-    // Get refresh token from cookie
     const refresh_token = req.cookies.refreshToken;
-    console.log(refresh_token)
     if(!refresh_token){
         return res.status(403).json({
             message: "Log In expired"
@@ -193,7 +166,6 @@ const refreshToken = async (req, res) => {
     try {
         const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
         
-        // Fetch complete user data from database
         const user = await prismaClient.user.findUnique({
             where: {
                 user_id: decoded.user_id
@@ -246,7 +218,6 @@ const requestPassword = async (req, res) => {
             });
         }
 
-        // Create a password reset token that expires in 1 hour
         const resetToken = jwt.sign(
             { user_id: user.user_id },
             process.env.ACCESS_TOKEN_SECRET,
@@ -319,7 +290,6 @@ const resetPassword = async (req, res) => {
 
 const logoutUser = async (req, res) => {
     try {
-        // Clear the refresh token cookie
         res.clearCookie('refreshToken', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -338,4 +308,4 @@ const logoutUser = async (req, res) => {
 };
 
 
-export default { logIn, signUp, getUsers, refreshToken, requestPassword, resetPassword, logoutUser };
+export default { logIn, signUp, refreshToken, requestPassword, resetPassword, logoutUser };

@@ -16,7 +16,6 @@ const getUser = async (req,res) => {
                 user_id: true,
             }
         })
-        console.log(user);
         return res.status(200).json(user);
     }catch(error){
         console.log(error);
@@ -27,7 +26,6 @@ const getUser = async (req,res) => {
 const getUsers = async (req, res) => {
     try{
         const users = await prismaClient.user.findMany();
-        console.log(" SKFSF" + users);
         return res.status(200).json(users);
     }catch(error){
         console.log(error);
@@ -84,12 +82,6 @@ const updateProfile = async (req, res) => {
             where: {
                 user_id: req.user.user_id
             }
-        });
-
-        console.log('Current user data:', {
-            name: user.name,
-            last_name: user.last_name,
-            email: user.email
         });
 
         if (!user) {
@@ -155,13 +147,10 @@ const updateProfile = async (req, res) => {
             }
 
             updateData.password = await bcrypt.hash(newPassword, 10);
-            console.log('Updating password');
         }
 
-        console.log('Final update data:', updateData);
 
         if (Object.keys(updateData).length === 0) {
-            console.log('No changes to update');
             return res.status(200).json({
                 message: "No changes were made",
                 user: user
@@ -182,7 +171,6 @@ const updateProfile = async (req, res) => {
             }
         });
 
-        console.log('Updated user data:', updatedUser);
 
         return res.status(200).json({
             message: "Profile updated successfully",
