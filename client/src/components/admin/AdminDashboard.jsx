@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HiUsers, HiDocumentText, HiPlus, HiTrash, HiPencil, HiUserAdd, HiSearch } from 'react-icons/hi';
+import { HiUsers, HiDocumentText, HiTrash, HiPencil, HiUserAdd, HiSearch } from 'react-icons/hi';
+import { IoStatsChart } from "react-icons/io5";
 import useUserStore from '../../stores/userStore';
 import axiosInstance from '../../api/axios';
 import Swal from 'sweetalert2';
@@ -228,13 +229,22 @@ const AdminDashboard = () => {
                     <h1 className="text-2xl font-semibold text-gray-800">Admin Dashboard</h1>
                     <p className="text-gray-600 text-md">Welcome back, {user?.name} {user?.last_name}</p>
                 </div>
-                <Link 
-                    to="/admin/create-user"
-                    className="sm:px-5 bg-blue-600 text-white md:px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
-                >
-                    <HiUserAdd className="text-xl" />
-                    Create New User
-                </Link>
+                <div className="flex gap-3">
+                    <Link 
+                        to="/admin/statistics"
+                        className="sm:px-5 bg-purple-600 text-white md:px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
+                    >
+                        <IoStatsChart className="text-xl" />
+                        Statistics
+                    </Link>
+                    <Link 
+                        to="/admin/create-user"
+                        className="sm:px-5 bg-blue-600 text-white md:px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
+                    >
+                        <HiUserAdd className="text-xl" />
+                        Create New User
+                    </Link>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

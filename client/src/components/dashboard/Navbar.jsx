@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import useUserStore from "../../stores/userStore.js";
 import { HiCog, HiLogout, HiShieldCheck } from "react-icons/hi";
+import { IoStatsChart } from "react-icons/io5";
 import { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
@@ -47,18 +48,28 @@ const Navbar = () => {
         {dropdownOpen && (
           <div className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-10">
             {user?.role === 'ADMIN' && (
-              <Link
-                to="/admin/dashboard"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                onClick={() => setDropdownOpen(false)}
-              >
-                <HiShieldCheck className="mr-2 h-5 w-5 text-blue-500" />
-                Admin Dashboard
-              </Link>
+              <>
+                <Link
+                  to="/admin/dashboard"
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <HiShieldCheck className="mr-2 h-5 w-5 text-blue-500" />
+                  Admin Dashboard
+                </Link>
+                <Link
+                  to="/admin/statistics"
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <IoStatsChart className="mr-2 h-5 w-5 text-[#9610fb]" />
+                  Admin Statistics
+                </Link>
+              </>
             )}
             <Link
               to={`/user/${user?.user_id}/settings`}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
               onClick={() => setDropdownOpen(false)}
             >
               <HiCog className="mr-2 h-5 w-5 text-gray-500" />
@@ -66,7 +77,7 @@ const Navbar = () => {
             </Link>
             <button
               onClick={handleLogout}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
             >
               <HiLogout className="mr-2 h-5 w-5 text-red-500" />
               Logout
