@@ -19,6 +19,7 @@ import SurveyResponse from './components/surveys/SurveyResponse'
 import AnswerSurvey from './components/surveys/AnswerSurvey';
 import AdminDashboard from './components/admin/AdminDashboard';
 import CreateUser from './components/admin/CreateUser';
+import AdminStatistics from './components/admin/AdminStatistics';
 
 function App() {
   const token = useUserStore((state) => state.token);
@@ -56,6 +57,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="create-user" element={<CreateUser />} />
+            <Route path="statistics" element={<AdminStatistics />} />
           </Route>
         </Route>
         

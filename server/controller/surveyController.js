@@ -84,7 +84,6 @@ const deleteSurvey = async (req,res) => {
                 survey_id: surveyId
             }
         });
-        console.log(existingSurvey)
     }
 
         if (!existingSurvey) {
