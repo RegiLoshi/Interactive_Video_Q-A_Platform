@@ -7,7 +7,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: true, // Allow all origins in development
+  origin: process.env.FRONTEND_URL || true, // Use env var in production, allow all in dev
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
